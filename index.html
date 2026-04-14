@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>南京 · 旅行地图</title>
-<!-- favicon: 梅花（南京市花） -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23B8722E'/><circle cx='16' cy='8' r='4.2' fill='white'/><circle cx='8.4' cy='13.5' r='4.2' fill='white'/><circle cx='11.3' cy='22.5' r='4.2' fill='white'/><circle cx='20.7' cy='22.5' r='4.2' fill='white'/><circle cx='23.6' cy='13.5' r='4.2' fill='white'/><circle cx='16' cy='16' r='3.2' fill='%23F5C842'/><circle cx='16' cy='8.2' r='1.1' fill='%23F5C842'/><circle cx='8.6' cy='13.6' r='1.1' fill='%23F5C842'/><circle cx='11.5' cy='22.4' r='1.1' fill='%23F5C842'/><circle cx='20.5' cy='22.4' r='1.1' fill='%23F5C842'/><circle cx='23.4' cy='13.6' r='1.1' fill='%23F5C842'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -22,22 +21,23 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--n
 
 /* ── Sidebar ── */
 .sidebar{width:var(--sb);flex-shrink:0;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
-.sb-head{padding:18px 18px 13px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#FBF8F4 0%,#fff 100%);display:flex;align-items:flex-start;justify-content:space-between}
+.sb-head{padding:16px 16px 12px;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#FBF8F4 0%,#fff 100%);display:flex;align-items:flex-start;justify-content:space-between}
 .sb-head-left{flex:1}
-.sb-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--navy)}
+.sb-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--navy)}
 .sb-sub{font-size:10.5px;color:var(--muted);margin-top:2px;font-weight:300;letter-spacing:1.6px;text-transform:uppercase}
-.sb-hint{margin-top:9px;padding:7px 9px;background:var(--amber-pale);border-radius:7px;font-size:11px;color:var(--amber);line-height:1.5;border:1px solid #EFDCC5;display:none}
+.sb-hint{margin-top:8px;padding:7px 9px;background:var(--amber-pale);border-radius:7px;font-size:11px;color:var(--amber);line-height:1.5;border:1px solid #EFDCC5;display:none}
 .sb-hint.show{display:block}
-/* Settings button in header */
-.sb-settings-btn{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 4px;border-radius:6px;transition:all .15s;flex-shrink:0;margin-top:2px}
+.sb-settings-btn{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:3px 5px;border-radius:6px;transition:all .15s;flex-shrink:0;margin-top:1px}
 .sb-settings-btn:hover{color:var(--amber);background:var(--amber-pale)}
-
-.sb-body{flex:1;overflow-y:auto;padding:8px 0}
+.sb-body{flex:1;overflow-y:auto;padding:6px 0}
 .sb-body::-webkit-scrollbar{width:3px}
 .sb-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
+/* day groups */
 .day-group{margin-bottom:2px}
-.day-hd{display:flex;align-items:center;padding:9px 16px 9px 18px;cursor:pointer;user-select:none;transition:background .15s}
+.day-group.drag-over>.place-list{background:#FBF3E8;border-radius:8px}
+.day-group.drag-over>.day-hd{background:var(--amber-pale)}
+.day-hd{display:flex;align-items:center;padding:8px 14px 8px 16px;cursor:pointer;user-select:none;transition:background .15s}
 .day-hd:hover{background:var(--cream)}
 .day-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
 .day-pip{width:7px;height:7px;border-radius:50%;flex-shrink:0}
@@ -47,22 +47,48 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--n
 .day-arr{font-size:9px;color:var(--muted);transition:transform .2s var(--ease);margin-left:2px}
 .day-group.closed .day-arr{transform:rotate(-90deg)}
 .day-group.closed .place-list{display:none}
-.day-del-btn{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:2px 5px;border-radius:4px;line-height:1;opacity:0;transition:all .15s;flex-shrink:0}
+.day-del-btn{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 5px;border-radius:4px;line-height:1;opacity:0;transition:all .15s;flex-shrink:0}
 .day-hd:hover .day-del-btn{opacity:1}
 .day-del-btn:hover{color:var(--red);background:#FEE5E5}
 
-.place-list{padding:2px 10px 6px}
-.place-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;cursor:pointer;transition:background .15s}
+/* place list + items */
+.place-list{padding:2px 10px 6px;min-height:28px;transition:background .15s}
+.place-item{display:flex;align-items:flex-start;gap:7px;padding:7px 9px;border-radius:9px;cursor:pointer;transition:background .15s,opacity .15s;position:relative}
 .place-item:hover{background:var(--cream)}
 .place-item.rf{background:#EDF7F2}
 .place-item.rt{background:#FDF0F0}
-.place-num{width:21px;height:21px;border-radius:50%;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.place-item.dragging{opacity:.35}
+.place-item.drag-above{border-top:2px solid var(--amber)}
+.place-item.drag-below{border-bottom:2px solid var(--amber)}
+
+/* drag handle */
+.drag-handle{color:var(--border);font-size:12px;cursor:grab;padding:3px 2px;flex-shrink:0;line-height:1;margin-top:2px;opacity:0;transition:opacity .15s;user-select:none}
+.place-item:hover .drag-handle{opacity:1}
+.drag-handle:active{cursor:grabbing}
+
+.place-num-wrap{position:relative;flex-shrink:0;margin-top:2px}
+.place-num{width:21px;height:21px;border-radius:50%;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s}
+.place-num:hover{transform:scale(1.15)}
+.place-num-input{position:absolute;top:-2px;left:-2px;width:25px;height:25px;border-radius:50%;border:2px solid var(--amber);background:#fff;color:var(--navy);font-size:10px;font-weight:700;text-align:center;outline:none;display:none}
+.place-num-input.show{display:block}
+
 .place-info{flex:1;min-width:0}
-.place-name-txt{font-size:12.5px;font-weight:500;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.place-name-row{display:flex;align-items:center;gap:4px}
+.place-name-txt{font-size:12.5px;font-weight:500;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.place-note-badge{font-size:11px;flex-shrink:0;opacity:.7;cursor:pointer;transition:opacity .15s;line-height:1}
+.place-note-badge:hover{opacity:1}
 .place-addr-txt{font-size:10.5px;color:var(--muted);font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-.place-del{opacity:0;background:none;border:none;color:var(--muted);font-size:15px;padding:2px 5px;border-radius:4px;cursor:pointer;transition:all .15s;line-height:1;flex-shrink:0}
-.place-item:hover .place-del{opacity:1}
-.place-del:hover{color:var(--red);background:#FEE}
+.place-note-area{margin-top:5px;display:none}
+.place-note-area.show{display:block}
+.place-note-ta{width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-family:'Noto Sans SC',sans-serif;font-size:11.5px;color:var(--slate);background:var(--white);resize:none;outline:none;transition:border-color .15s;min-height:52px;line-height:1.5}
+.place-note-ta:focus{border-color:var(--amber)}
+.place-note-txt{font-size:11px;color:var(--muted);line-height:1.5;padding:4px 6px;background:rgba(0,0,0,.02);border-radius:5px;white-space:pre-wrap;word-break:break-all}
+
+.place-actions{display:flex;align-items:center;gap:1px;flex-shrink:0;opacity:0;transition:opacity .15s;margin-top:1px}
+.place-item:hover .place-actions{opacity:1}
+.place-action-btn{background:none;border:none;color:var(--muted);font-size:14px;padding:2px 4px;border-radius:4px;cursor:pointer;line-height:1;transition:all .15s}
+.place-action-btn:hover{color:var(--amber);background:var(--amber-pale)}
+.place-del-btn:hover{color:var(--red)!important;background:#FEE5E5!important}
 .place-empty{padding:6px 10px;font-size:11.5px;color:var(--muted);font-weight:300}
 
 .sb-foot{padding:10px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:6px}
@@ -84,30 +110,15 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--n
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--amber);animation:spin .7s linear infinite}
 
-/* ── Top bar (search + mode buttons in one row) ── */
-.top-bar{
-  position:absolute;top:14px;left:14px;right:58px;
-  z-index:100;display:none;align-items:center;gap:8px;
-}
-/* Search floating */
+/* ── Top bar ── */
+.top-bar{position:absolute;top:14px;left:14px;right:58px;z-index:100;display:none;align-items:center;gap:8px}
 .map-search-wrap{position:relative;flex:1;max-width:260px}
-.map-search-inp{
-  width:100%;padding:8px 34px 8px 34px;
-  background:var(--white);border:1.5px solid transparent;border-radius:10px;
-  box-shadow:var(--sh);font-family:'Noto Sans SC',sans-serif;font-size:12px;
-  color:var(--navy);outline:none;transition:border-color .15s;
-}
+.map-search-inp{width:100%;padding:8px 32px 8px 32px;background:var(--white);border:1.5px solid transparent;border-radius:10px;box-shadow:var(--sh);font-family:'Noto Sans SC',sans-serif;font-size:12px;color:var(--navy);outline:none;transition:border-color .15s}
 .map-search-inp:focus{border-color:var(--amber)}
 .map-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none}
 .map-search-clear{position:absolute;right:9px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:0;display:none;line-height:1}
 .map-search-clear.show{display:block}
-.map-search-clear:hover{color:var(--navy)}
-.map-search-dd{
-  position:absolute;top:calc(100% + 5px);left:0;right:0;
-  background:var(--white);border:1px solid var(--border);border-radius:11px;
-  box-shadow:var(--sh);max-height:260px;overflow-y:auto;
-  z-index:200;display:none;
-}
+.map-search-dd{position:absolute;top:calc(100% + 5px);left:0;right:0;background:var(--white);border:1px solid var(--border);border-radius:11px;box-shadow:var(--sh);max-height:260px;overflow-y:auto;z-index:200;display:none}
 .map-search-dd.show{display:block}
 .map-search-dd::-webkit-scrollbar{width:3px}
 .map-search-dd::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -121,7 +132,6 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--n
 .search-loading{padding:12px;text-align:center;color:var(--muted);font-size:12px;display:flex;align-items:center;justify-content:center;gap:7px}
 .search-none{padding:12px;text-align:center;color:var(--muted);font-size:12px}
 
-/* Mode buttons */
 .mode-group{background:var(--white);border-radius:10px;box-shadow:var(--sh);padding:3px;display:flex;gap:2px;flex-shrink:0}
 .mode-btn{padding:6px 12px;border-radius:7px;border:none;background:transparent;font-family:'Noto Sans SC',sans-serif;font-size:11.5px;font-weight:500;color:var(--slate);cursor:pointer;transition:all .15s;white-space:nowrap}
 .mode-btn.on{background:var(--amber);color:#fff}
@@ -133,14 +143,13 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--n
 .ctrl-btn:hover{background:var(--cream);color:var(--amber)}
 .ctrl-btn.on{background:var(--amber);color:#fff}
 
-/* ── Add hint ── */
 .add-hint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;background:var(--navy);color:#fff;padding:9px 18px;border-radius:22px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .25s var(--ease);white-space:nowrap}
 .add-hint.on{opacity:1}
 
 /* ── Route panel ── */
 .route-panel{position:absolute;bottom:18px;right:18px;width:320px;max-height:calc(100vh - 100px);background:var(--white);border-radius:16px;box-shadow:var(--sh);z-index:100;display:none;flex-direction:column;overflow:hidden}
 .route-panel.on{display:flex}
-.rp-head{display:flex;align-items:center;justify-content:space-between;padding:13px 15px 11px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.rp-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 10px;flex-shrink:0;border-bottom:1px solid var(--border)}
 .rp-title{font-size:13px;font-weight:600;color:var(--navy)}
 .rp-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:0 2px}
 .rp-close:hover{color:var(--navy)}
@@ -177,16 +186,14 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--n
 .step-row:last-child{margin-bottom:0}
 .step-line{display:flex;flex-direction:column;align-items:center;flex-shrink:0;margin-top:3px}
 .step-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
-.dot-walk{background:#94A3B8}.dot-bus{background:#F97316}.dot-subway{background:var(--blue)}.dot-dest{background:var(--red)}
+.dot-walk{background:#94A3B8}.dot-bus{background:#F97316}.dot-subway{background:var(--blue)}
 .step-connector{width:2px;flex:1;min-height:12px;margin:2px 0;border-radius:1px}
 .conn-walk{background:#E2E8F0}.conn-bus{background:#FEE4CC}.conn-subway{background:#DBEAFE}
 .step-info{flex:1;min-width:0;padding-bottom:4px}
-.step-mode{font-size:10.5px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:4px}
+.step-mode{font-size:10.5px;font-weight:700;margin-bottom:2px}
 .mode-walk{color:#64748B}.mode-bus{color:#F97316}.mode-subway{color:var(--blue)}
-.step-line-badge{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;color:#fff;margin-left:2px}
 .step-desc{font-size:11.5px;color:var(--navy);line-height:1.45}
 .step-detail{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.4}
-.step-stops-badge{display:inline-block;padding:1px 6px;background:#EEF2FF;color:#3730A3;border-radius:4px;font-size:10px;font-weight:600;margin-top:3px}
 .tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10.5px;font-weight:600;margin-right:3px;vertical-align:middle}
 .tag-sub{background:#DBEAFE;color:#1D4ED8}.tag-bus{background:#FEF3C7;color:#B45309}.tag-walk{background:#F1F5F9;color:#64748B}
 
@@ -196,19 +203,18 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--n
 .steps-title{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin:10px 0 8px}
 .rp-loading{padding:20px;text-align:center;color:var(--muted);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
 .rp-empty{padding:14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
-/* debug dump */
-.debug-toggle{font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:2px;display:block;margin-top:10px;text-align:center}
-.debug-dump{background:#F8F8F8;border:1px solid var(--border);border-radius:7px;padding:8px;font-size:9.5px;color:#555;white-space:pre-wrap;word-break:break-all;margin-top:6px;max-height:200px;overflow-y:auto;display:none;font-family:monospace}
+.debug-toggle{font-size:10px;color:var(--muted);cursor:pointer;text-decoration:underline;display:block;margin-top:8px;text-align:center}
+.debug-dump{display:none;font-size:9.5px;background:#F8FAFC;border:1px solid var(--border);border-radius:6px;padding:7px;margin-top:6px;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;color:var(--slate);line-height:1.4}
 .debug-dump.on{display:block}
 
 /* ── Modals ── */
 .overlay{position:fixed;inset:0;background:rgba(28,33,48,.5);backdrop-filter:blur(5px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
 .overlay.on{opacity:1;pointer-events:all}
-.modal{background:var(--white);border-radius:18px;padding:26px;width:380px;max-width:calc(100vw - 32px);box-shadow:0 20px 60px rgba(28,33,48,.2);transform:translateY(18px);transition:transform .25s var(--ease)}
+.modal{background:var(--white);border-radius:18px;padding:24px;width:380px;max-width:calc(100vw - 32px);box-shadow:0 20px 60px rgba(28,33,48,.2);transform:translateY(18px);transition:transform .25s var(--ease)}
 .overlay.on .modal{transform:translateY(0)}
 .modal-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--navy);margin-bottom:5px}
-.modal-sub{font-size:12px;color:var(--muted);font-weight:300;margin-bottom:18px;line-height:1.6}
-.form-g{margin-bottom:13px}
+.modal-sub{font-size:12px;color:var(--muted);font-weight:300;margin-bottom:16px;line-height:1.6}
+.form-g{margin-bottom:12px}
 .form-l{font-size:11.5px;color:var(--slate);font-weight:500;display:block;margin-bottom:5px}
 .form-i{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-family:'Noto Sans SC',sans-serif;font-size:13px;color:var(--navy);background:var(--cream);transition:border-color .15s;outline:none}
 .form-i:focus{border-color:var(--amber);background:#fff}
@@ -216,12 +222,12 @@ body{font-family:'Noto Sans SC',sans-serif;background:var(--cream);color:var(--n
 select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%238B95A6' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
 .form-i-group{display:flex;gap:6px}
 .form-i-group .form-i{flex:1}
-.key-status{font-size:11px;padding:8px 11px;border-radius:8px;margin-bottom:14px;line-height:1.5}
-.key-ok{background:#ECFDF5;color:#065F46;border:1px solid #A7F3D0}
-.key-none{background:#FFF7ED;color:#92400E;border:1px solid #FDE68A}
+.key-status{font-size:11px;padding:8px 10px;border-radius:8px;margin-bottom:10px;line-height:1.5;border:1px solid}
+.key-ok{background:#ECFDF5;color:#065F46;border-color:#A7F3D0}
+.key-none{background:#FFF7ED;color:#92400E;border-color:#FDE68A}
 .modal-note{font-size:11px;color:var(--muted);line-height:1.6}
 .modal-note a{color:var(--amber);text-decoration:none}
-.modal-actions{display:flex;gap:7px;margin-top:18px}
+.modal-actions{display:flex;gap:7px;margin-top:16px}
 .modal-actions .btn{flex:1}
 
 .confirm-overlay{position:fixed;inset:0;background:rgba(28,33,48,.4);backdrop-filter:blur(4px);z-index:600;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
@@ -246,14 +252,11 @@ select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/sv
 .fab:hover{transform:scale(1.06);background:var(--amber-h)}
 
 @media(max-width:768px){
-  .sidebar{display:none}
-  .m-sheet{display:flex}
-  .fab{display:flex}
+  .sidebar{display:none}.m-sheet{display:flex}.fab{display:flex}
   .top-bar{top:10px;left:10px;right:52px}
   .route-panel{right:8px;bottom:8px;width:calc(100vw - 16px);max-height:56vh}
-  .add-hint{bottom:82px}
-  .map-ctrl{top:10px;right:10px}
-  .mode-group{display:none} /* mobile hides mode buttons from top bar, uses panel instead */
+  .add-hint{bottom:82px}.map-ctrl{top:10px;right:10px}
+  .mode-group{display:none}
 }
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(184,114,46,.5)}50%{box-shadow:0 0 0 7px rgba(184,114,46,0)}}
 .marker-new{animation:pulse .6s 3}
@@ -261,103 +264,64 @@ select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/sv
 </head>
 <body>
 
-<!-- ══ API Key Modal ══ -->
+<!-- API Key Modal -->
 <div class="overlay on" id="api-overlay">
   <div class="modal">
-    <div style="width:44px;height:44px;border-radius:12px;background:var(--amber-pale);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px">🗺️</div>
+    <div style="width:42px;height:42px;border-radius:11px;background:var(--amber-pale);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:12px">🗺️</div>
     <div class="modal-title">配置地图服务</div>
     <div class="modal-sub">高德 JS API v2.0 需同时填写 Key 与安全密钥</div>
-    <div class="form-g">
-      <label class="form-l">JS API Key</label>
-      <input class="form-i" id="api-inp" type="text" placeholder="应用管理 → 你的应用 → Key">
-    </div>
-    <div class="form-g" style="margin-bottom:6px">
-      <label class="form-l">安全密钥（jsCode）</label>
-      <input class="form-i" id="api-scode" type="text" placeholder="应用管理 → 你的应用 → 安全密钥">
-    </div>
-    <p class="modal-note">进入 <a href="https://console.amap.com/dev/key/app" target="_blank">console.amap.com → 应用管理</a>，点击应用名称可见 <b>Key</b> 和 <b>安全密钥</b> 两项。两者均仅保存在本地。</p>
-    <div class="modal-actions">
-      <button class="btn btn-amber" onclick="initWithKey()">开始使用 →</button>
-    </div>
+    <div class="form-g"><label class="form-l">JS API Key</label><input class="form-i" id="api-inp" type="text" placeholder="应用管理 → Key"></div>
+    <div class="form-g" style="margin-bottom:6px"><label class="form-l">安全密钥（jsCode）</label><input class="form-i" id="api-scode" type="text" placeholder="应用管理 → 安全密钥"></div>
+    <p class="modal-note">进入 <a href="https://console.amap.com/dev/key/app" target="_blank">console.amap.com → 应用管理</a> 找到 Key 和安全密钥</p>
+    <div class="modal-actions"><button class="btn btn-amber" onclick="initWithKey()">开始使用 →</button></div>
   </div>
 </div>
 
-<!-- ══ Settings Modal ══ -->
+<!-- Settings Modal -->
 <div class="overlay" id="settings-overlay">
   <div class="modal">
-    <div class="modal-title">API 密钥设置</div>
+    <div class="modal-title">设置</div>
     <div id="key-status-box"></div>
-    <div class="form-g">
-      <label class="form-l">JS API Key</label>
-      <div class="form-i-group">
-        <input class="form-i" id="set-key" type="password" placeholder="当前已保存">
-        <button class="btn btn-ghost btn-sm" onclick="toggleKeyVis('set-key',this)" style="flex-shrink:0;padding:6px 10px;white-space:nowrap">👁 查看</button>
-      </div>
-    </div>
-    <div class="form-g">
-      <label class="form-l">安全密钥（jsCode）</label>
-      <div class="form-i-group">
-        <input class="form-i" id="set-scode" type="password" placeholder="当前已保存">
-        <button class="btn btn-ghost btn-sm" onclick="toggleKeyVis('set-scode',this)" style="flex-shrink:0;padding:6px 10px;white-space:nowrap">👁 查看</button>
-      </div>
-    </div>
-    <div class="form-g" style="margin-top:4px">
-      <label class="form-l" style="display:flex;align-items:center;gap:6px">
-        ☁ 云端同步 URL
-        <span style="font-size:10px;color:var(--muted);font-weight:300">（可选，留空则只用本地存储）</span>
-      </label>
-      <input class="form-i" id="set-sync" type="text" placeholder="https://your-worker.workers.dev/api/data">
-    </div>
-    <p class="modal-note">Key 与安全密钥修改后需重新加载。云端同步 URL 填写 Cloudflare Worker 地址后，每次添加/删除地点时自动同步，任意设备打开均读取最新数据。</p>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="hide('settings-overlay')">取消</button>
-      <button class="btn btn-amber" onclick="saveSettings()">保存并重载</button>
-    </div>
+    <div style="font-size:11.5px;font-weight:600;color:var(--slate);margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--border)">API 密钥</div>
+    <div class="form-g"><label class="form-l">JS API Key</label><div class="form-i-group"><input class="form-i" id="set-key" type="password" placeholder="当前已保存"><button class="btn btn-ghost btn-sm" onclick="toggleKeyVis('set-key',this)" style="flex-shrink:0;white-space:nowrap">👁 查看</button></div></div>
+    <div class="form-g"><label class="form-l">安全密钥</label><div class="form-i-group"><input class="form-i" id="set-scode" type="password" placeholder="当前已保存"><button class="btn btn-ghost btn-sm" onclick="toggleKeyVis('set-scode',this)" style="flex-shrink:0;white-space:nowrap">👁 查看</button></div></div>
+    <div style="font-size:11.5px;font-weight:600;color:var(--slate);margin:4px 0 9px;padding-bottom:6px;border-bottom:1px solid var(--border)">云端同步（可选）</div>
+    <div class="form-g" style="margin-bottom:6px"><label class="form-l">Cloudflare Worker URL</label><input class="form-i" id="set-sync" type="text" placeholder="https://your-worker.workers.dev"></div>
+    <p class="modal-note">留空则仅本地保存。填入 Worker URL 后任意设备打开自动同步。</p>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="hide('settings-overlay')">取消</button><button class="btn btn-amber" onclick="saveSettings()">保存并重载</button></div>
   </div>
 </div>
 
-<!-- ══ Add Place Modal ══ -->
+<!-- Add Place Modal -->
 <div class="overlay" id="add-overlay">
   <div class="modal">
     <div class="modal-title">添加地点</div>
     <div class="modal-sub" id="add-geocode">正在获取位置信息…</div>
-    <div class="form-g">
-      <label class="form-l">地点名称 *</label>
-      <input class="form-i" id="add-name" placeholder="例：玄武湖公园">
-    </div>
-    <div class="form-g">
-      <label class="form-l">所属天数</label>
-      <select class="form-i" id="add-day"></select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeAddModal()">取消</button>
-      <button class="btn btn-amber" onclick="confirmAdd()">添加地点</button>
-    </div>
+    <div class="form-g"><label class="form-l">地点名称 *</label><input class="form-i" id="add-name" placeholder="例：玄武湖公园"></div>
+    <div class="form-g"><label class="form-l">所属天数</label><select class="form-i" id="add-day"></select></div>
+    <div class="modal-actions"><button class="btn btn-ghost" onclick="closeAddModal()">取消</button><button class="btn btn-amber" onclick="confirmAdd()">添加地点</button></div>
   </div>
 </div>
 
-<!-- ══ Confirm Dialog ══ -->
+<!-- Confirm -->
 <div class="confirm-overlay" id="confirm-overlay">
   <div class="confirm-box">
     <div class="confirm-title" id="confirm-title">确认删除</div>
     <div class="confirm-body" id="confirm-body"></div>
-    <div class="confirm-btns">
-      <button class="btn btn-ghost btn-sm" onclick="dismissConfirm()">取消</button>
-      <button class="btn btn-sm" id="confirm-ok" style="background:var(--red);color:#fff">删除</button>
-    </div>
+    <div class="confirm-btns"><button class="btn btn-ghost btn-sm" onclick="dismissConfirm()">取消</button><button class="btn btn-sm" id="confirm-ok" style="background:var(--red);color:#fff">删除</button></div>
   </div>
 </div>
 
-<!-- ══ App ══ -->
+<!-- App -->
 <div class="app">
   <aside class="sidebar">
     <div class="sb-head">
       <div class="sb-head-left">
         <div class="sb-title">南京之旅</div>
         <div class="sb-sub">Nanjing · Travel Map</div>
-        <div class="sb-hint" id="sb-hint">📍 选点模式已开启，请点击地图任意位置</div>
+        <div class="sb-hint" id="sb-hint">📍 选点模式已开启，点击地图任意位置</div>
       </div>
-      <button class="sb-settings-btn" onclick="openSettings()" title="API 密钥设置">⚙</button>
+      <button class="sb-settings-btn" onclick="openSettings()" title="设置">⚙</button>
     </div>
     <div class="sb-body" id="sb-body"></div>
     <div class="sb-foot">
@@ -367,14 +331,9 @@ select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/sv
   </aside>
 
   <div class="map-wrap">
-    <div class="map-load" id="map-load">
-      <div class="spinner"></div>
-      <div class="load-title">南京 · 旅行地图</div>
-      <div class="load-sub">正在加载地图…</div>
-    </div>
+    <div class="map-load" id="map-load"><div class="spinner"></div><div class="load-title">南京 · 旅行地图</div><div class="load-sub">正在加载地图…</div></div>
     <div id="map"></div>
 
-    <!-- Top bar: search + mode buttons -->
     <div class="top-bar" id="top-bar">
       <div class="map-search-wrap" id="search-wrap">
         <span class="map-search-icon">🔍</span>
@@ -383,45 +342,34 @@ select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/sv
         <div class="map-search-dd" id="search-dd"></div>
       </div>
       <div class="mode-group">
-        <button class="mode-btn on" data-m="transit" onclick="setMode('transit',this)">🚇 公交地铁</button>
-        <button class="mode-btn" data-m="walking" onclick="setMode('walking',this)">🚶 步行</button>
-        <button class="mode-btn" data-m="riding" onclick="setMode('riding',this)">🚴 骑行</button>
+        <button class="mode-btn on" data-m="transit" onclick="setMode('transit')">🚇 公交地铁</button>
+        <button class="mode-btn" data-m="walking" onclick="setMode('walking')">🚶 步行</button>
+        <button class="mode-btn" data-m="riding" onclick="setMode('riding')">🚴 骑行</button>
       </div>
     </div>
 
-    <!-- Right controls -->
     <div class="map-ctrl" id="map-ctrl" style="display:none">
       <button class="ctrl-btn" id="locate-btn" title="定位" onclick="toggleLocate()">◎</button>
     </div>
 
     <div class="add-hint" id="add-hint">点击地图任意位置添加地点 · 再次点击此处取消</div>
 
-    <!-- Route panel -->
     <div class="route-panel" id="rp">
-      <div class="rp-head">
-        <span class="rp-title">路线规划</span>
-        <button class="rp-close" onclick="clearRoute()">✕</button>
-      </div>
+      <div class="rp-head"><span class="rp-title">路线规划</span><button class="rp-close" onclick="clearRoute()">✕</button></div>
       <div class="rp-points" id="rp-pts"></div>
       <div class="rp-modes">
-        <button class="rm-btn on" data-m="transit" onclick="setMode('transit',this,true)">🚇 公交</button>
-        <button class="rm-btn" data-m="walking" onclick="setMode('walking',this,true)">🚶 步行</button>
-        <button class="rm-btn" data-m="riding" onclick="setMode('riding',this,true)">🚴 骑行</button>
+        <button class="rm-btn on" data-m="transit" onclick="setMode('transit')">🚇 公交</button>
+        <button class="rm-btn" data-m="walking" onclick="setMode('walking')">🚶 步行</button>
+        <button class="rm-btn" data-m="riding" onclick="setMode('riding')">🚴 骑行</button>
       </div>
-      <div class="rp-body" id="rp-body">
-        <div class="rp-empty">请点击地图上的标记<br>选择起点和终点</div>
-      </div>
+      <div class="rp-body" id="rp-body"><div class="rp-empty">请点击地图标记<br>选择起点和终点</div></div>
     </div>
   </div>
 </div>
 
-<!-- Mobile sheet -->
 <div class="m-sheet" id="m-sheet">
   <div class="sheet-grip" id="grip"></div>
-  <div class="sheet-hd">
-    <span class="sheet-title">行程地点</span>
-    <span class="sheet-cnt" id="sh-cnt">0 个地点</span>
-  </div>
+  <div class="sheet-hd"><span class="sheet-title">行程地点</span><span class="sheet-cnt" id="sh-cnt">0 个地点</span></div>
   <div class="sheet-body" id="sh-body"></div>
   <div class="sheet-ft">
     <button class="btn btn-ghost btn-sm" style="flex:1" onclick="addDay()">＋ 天数</button>
@@ -431,275 +379,167 @@ select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/sv
 <button class="fab" id="fab-s" onclick="toggleSheet()">☰</button>
 
 <script>
-/* ╔══════════════════════════════════════════════════════════╗
-   ║  📌 部署配置（填好后任何设备打开都无需重新输入）              ║
-   ║  部署到固定网址后填写下方三项，留空则使用手动输入的密钥        ║
-   ╚══════════════════════════════════════════════════════════╝ */
+/* ╔══════════════════════════════════════════╗
+   ║  📌 部署配置（填好后无需每次输入）          ║
+   ╚══════════════════════════════════════════╝ */
 const DEPLOY_CONFIG = {
-  amapKey:   'e00a6b490d6fdcc73c01caa07a682416',   // ← 你的高德 JS API Key
-  amapScode: 'c61b6cc66255325efeb7812b1821ccd2',   // ← 你的高德安全密钥（jsCode）
-  workerUrl: 'https://purple-fire-da20.haynanson.workers.dev/',   // ← 你的 Cloudflare Worker URL（用于云同步，可不填）
+  amapKey:   'e00a6b490d6fdcc73c01caa07a682416',  // ← 高德 JS API Key
+  amapScode: 'c61b6cc66255325efeb7812b1821ccd2',  // ← 高德安全密钥（jsCode）
+  workerUrl: 'https://purple-fire-da20.haynanson.workers.dev',  // ← Cloudflare Worker URL（可选）
 };
-/* ────────────────────────────────────────────────────────────
-   安全说明：
-   · 高德 JS API Key 本身必须在浏览器端运行，无法完全隐藏。
-   · 在高德控制台将 Key 的「域名白名单」设为你的域名，
-     他人即使拿到 Key 也无法在自己的域名使用，已足够安全。
-   · 如需更高隔离：在高德控制台绑定域名 → 仅你的域名可用。
-   ──────────────────────────────────────────────────────────── */
 
-/* ══════════════════════════════════════
-   State
-══════════════════════════════════════ */
+/* ══ State ══ */
 const DAY_COLORS=['#B8722E','#4A9B6F','#C24B4B','#3B6ED4','#8B5CF6','#D97706','#0891B2','#BE185D'];
 let S={days:[{id:1,label:'Day 1',date:''}],places:[],nDayId:2,nPlaceId:1,
        rFrom:null,rTo:null,rMode:'transit',addMode:false,locateOn:false,activePlan:0};
 let MAP=null,GEOCODER=null,LOCATOR=null,PLACE_SEARCH=null;
-let MARKERS={},pendingLL=null,sheetUp=false,allPlans=[];
-let searchTimer=null,activePlugin=null;
+let MARKERS={},pendingLL=null,sheetUp=false,allPlans=[],activePlugin=null;
+let searchTimer=null;
+// drag state
+let dragPlaceId=null,dragSrcDayId=null;
 
-/* ══════════════════════════════════════
-   Persist
-══════════════════════════════════════ */
-const STORE='nj_trip_v4';
-// 取配置值：DEPLOY_CONFIG（硬编码）优先，回退到 localStorage（手动输入）
-function getCfg(key,lsKey){return(DEPLOY_CONFIG[key]&&DEPLOY_CONFIG[key].trim())||localStorage.getItem(lsKey)||''}
+/* ══ Config helpers ══ */
+function getCfg(k,lk){return(DEPLOY_CONFIG[k]&&DEPLOY_CONFIG[k].trim())||localStorage.getItem(lk)||''}
 function getAmapKey(){return getCfg('amapKey','amap_key')}
 function getAmapScode(){return getCfg('amapScode','amap_scode')}
-function getSyncUrl(){return getCfg('workerUrl','sync_url')}
+function getSyncUrl(){const u=getCfg('workerUrl','sync_url');return u?u.replace(/\/$/,''):''}
 
+/* ══ Persist ══ */
+const STORE='nj_trip_v5';
 function dataObj(){return{days:S.days,places:S.places,nDayId:S.nDayId,nPlaceId:S.nPlaceId}}
 function applyData(d){if(!d)return;S.days=d.days||S.days;S.places=d.places||[];S.nDayId=d.nDayId||2;S.nPlaceId=d.nPlaceId||1}
-
 function save(){
   try{localStorage.setItem(STORE,JSON.stringify(dataObj()))}catch(_){}
   const url=getSyncUrl();
-  if(url){
-    fetch(`${url}/data`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dataObj())})
-      .catch(()=>{});
-  }
+  if(url)fetch(`${url}/data`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dataObj())}).catch(()=>{});
 }
-
 async function load(){
   try{applyData(JSON.parse(localStorage.getItem(STORE)||'null'))}catch(_){}
-  const url=getSyncUrl();
-  if(!url)return;
-  try{
-    const res=await fetch(`${url}/data`,{signal:AbortSignal.timeout(4000)});
-    if(res.ok){
-      const d=await res.json();
-      if(d&&Object.keys(d).length){
-        applyData(d);
-        localStorage.setItem(STORE,JSON.stringify(dataObj()));
-      }
-    }
-  }catch(_){}
+  const url=getSyncUrl();if(!url)return;
+  try{const r=await fetch(`${url}/data`,{signal:AbortSignal.timeout(4000)});
+    if(r.ok){const d=await r.json();if(d&&Object.keys(d).length){applyData(d);localStorage.setItem(STORE,JSON.stringify(dataObj()))}}}catch(_){}
 }
 
-
-/* ══════════════════════════════════════
-   Boot
-══════════════════════════════════════ */
+/* ══ Boot ══ */
 window.addEventListener('DOMContentLoaded',async()=>{
   await load();
-  const key=getAmapKey(),scode=getAmapScode();
-  if(key&&scode){hide('api-overlay');loadAmap(key,scode)}
+  const k=getAmapKey(),s=getAmapScode();
+  if(k&&s){hide('api-overlay');loadAmap(k,s)}
   render();initSheet();initSearchBox();
 });
 
 function initWithKey(){
-  const key=$('api-inp').value.trim();
-  const scode=$('api-scode').value.trim();
-  let err=false;
-  if(!key){$('api-inp').classList.add('err');err=true}
-  if(!scode){$('api-scode').classList.add('err');err=true}
-  if(err){setTimeout(()=>{$('api-inp').classList.remove('err');$('api-scode').classList.remove('err')},1500);return}
-  localStorage.setItem('amap_key',key);
-  localStorage.setItem('amap_scode',scode);
-  hide('api-overlay');
-  loadAmap(key,scode);
+  const k=$('api-inp').value.trim(),s=$('api-scode').value.trim();
+  let e=false;if(!k){$('api-inp').classList.add('err');e=true}if(!s){$('api-scode').classList.add('err');e=true}
+  if(e){setTimeout(()=>{$('api-inp').classList.remove('err');$('api-scode').classList.remove('err')},1500);return}
+  localStorage.setItem('amap_key',k);localStorage.setItem('amap_scode',s);
+  hide('api-overlay');loadAmap(k,s);
 }
-
-function loadAmap(key,scode){
-  window._AMapSecurityConfig={securityJsCode:scode};
-  const s=document.createElement('script');
-  s.src=`https://webapi.amap.com/maps?v=2.0&key=${key}`;
-  s.onload=initMap;
-  s.onerror=()=>{
-    $('map-load').innerHTML=`<div style="text-align:center;padding:20px">
-      <div style="font-size:36px;margin-bottom:12px">⚠️</div>
-      <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--navy)">加载失败</div>
-      <div style="font-size:12px;color:var(--muted);margin:8px 0 16px">请检查 Key 是否为 Web（JS API）类型，或网络是否正常</div>
-      <button class="btn btn-amber" onclick="resetKey()">重新配置</button></div>`;
-  };
-  document.head.appendChild(s);
+function loadAmap(k,s){
+  window._AMapSecurityConfig={securityJsCode:s};
+  const sc=document.createElement('script');sc.src=`https://webapi.amap.com/maps?v=2.0&key=${k}`;
+  sc.onload=initMap;
+  sc.onerror=()=>$('map-load').innerHTML=`<div style="text-align:center;padding:20px"><div style="font-size:36px;margin-bottom:10px">⚠️</div><div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--navy)">加载失败</div><div style="font-size:12px;color:var(--muted);margin:8px 0 14px">请检查 Key 和安全密钥是否正确</div><button class="btn btn-amber" onclick="resetKey()">重新配置</button></div>`;
+  document.head.appendChild(sc);
 }
-
-function resetKey(){
-  localStorage.removeItem('amap_key');
-  localStorage.removeItem('amap_scode');
-  location.reload();
-}
-
+function resetKey(){localStorage.removeItem('amap_key');localStorage.removeItem('amap_scode');location.reload()}
 function initMap(){
   MAP=new AMap.Map('map',{zoom:13,center:[118.7969,32.0603],showBuildingBlock:true});
   MAP.on('complete',()=>{
-    $('map-load').style.display='none';
-    $('top-bar').style.display='flex';
-    $('map-ctrl').style.display='flex';
+    $('map-load').style.display='none';$('top-bar').style.display='flex';$('map-ctrl').style.display='flex';
     AMap.plugin(['AMap.Walking','AMap.Riding','AMap.Transfer','AMap.Geocoder','AMap.Geolocation','AMap.PlaceSearch'],()=>{
       GEOCODER=new AMap.Geocoder({city:'南京'});
       PLACE_SEARCH=new AMap.PlaceSearch({city:'南京',pageSize:8,extensions:'base'});
     });
   });
-  MAP.on('click',onMapClick);
-  S.places.forEach(p=>spawnMarker(p));
+  MAP.on('click',onMapClick);S.places.forEach(p=>spawnMarker(p));
 }
 
-/* ══════════════════════════════════════
-   Settings modal
-══════════════════════════════════════ */
+/* ══ Settings ══ */
 function openSettings(){
-  const key=getAmapKey(),scode=getAmapScode(),syncUrl=getSyncUrl();
-  const keyHard=!!(DEPLOY_CONFIG.amapKey&&DEPLOY_CONFIG.amapKey.trim());
-  const syncHard=!!(DEPLOY_CONFIG.workerUrl&&DEPLOY_CONFIG.workerUrl.trim());
+  const k=getAmapKey(),s=getAmapScode(),u=getSyncUrl();
+  const kHard=!!(DEPLOY_CONFIG.amapKey&&DEPLOY_CONFIG.amapKey.trim());
+  const uHard=!!(DEPLOY_CONFIG.workerUrl&&DEPLOY_CONFIG.workerUrl.trim());
   $('key-status-box').innerHTML=`
-    <div class="key-status ${key&&scode?'key-ok':'key-none'}">
-      ${key&&scode?'✅ API 密钥已配置':'⚠️ 尚未配置密钥'}
-      ${keyHard?'<span style="font-size:10px;opacity:.65"> · 已硬编码（需编辑 HTML 修改）</span>':''}
-    </div>
-    <div class="key-status" style="background:${syncUrl?'#ECFDF5':'#F8FAFC'};color:${syncUrl?'#065F46':'var(--muted)'};border-color:${syncUrl?'#A7F3D0':'var(--border)'};margin-top:5px">
-      ${syncUrl?'☁️ 云端同步已启用':'💾 仅本地存储'}
-      ${syncHard?'<span style="font-size:10px;opacity:.65"> · 已硬编码</span>':''}
-    </div>`;
-  $('set-key').value=key;$('set-key').type='password';$('set-key').readOnly=keyHard;
-  $('set-scode').value=scode;$('set-scode').type='password';$('set-scode').readOnly=keyHard;
-  $('set-sync').value=syncUrl;$('set-sync').readOnly=syncHard;
-  [$('set-key'),$('set-scode')].forEach(el=>el.style.opacity=keyHard?'.55':'1');
+    <div class="key-status ${k&&s?'key-ok':'key-none'}">${k&&s?'✅ 密钥已配置':'⚠️ 尚未配置密钥'}${kHard?' <span style="font-size:10px;opacity:.6">· 已硬编码</span>':''}</div>
+    <div class="key-status" style="background:${u?'#ECFDF5':'#F8FAFC'};color:${u?'#065F46':'var(--muted)'};border-color:${u?'#A7F3D0':'var(--border)'};margin-top:5px">${u?'☁️ 云端同步已启用':'💾 仅本地存储'}${uHard?' <span style="font-size:10px;opacity:.6">· 已硬编码</span>':''}</div>`;
+  $('set-key').value=k;$('set-key').type='password';$('set-key').readOnly=kHard;$('set-key').style.opacity=kHard?'.5':'1';
+  $('set-scode').value=s;$('set-scode').type='password';$('set-scode').readOnly=kHard;$('set-scode').style.opacity=kHard?'.5':'1';
+  $('set-sync').value=u;$('set-sync').readOnly=uHard;
   show('settings-overlay');
 }
-function toggleKeyVis(id,btn){
-  const inp=$(id);
-  if(inp.type==='password'){inp.type='text';btn.textContent='🙈 隐藏'}
-  else{inp.type='password';btn.textContent='👁 查看'}
-}
+function toggleKeyVis(id,btn){const i=$(id);if(i.type==='password'){i.type='text';btn.textContent='🙈 隐藏'}else{i.type='password';btn.textContent='👁 查看'}}
 function saveSettings(){
-  const keyHard=!!(DEPLOY_CONFIG.amapKey&&DEPLOY_CONFIG.amapKey.trim());
-  if(!keyHard){
-    const key=$('set-key').value.trim(),scode=$('set-scode').value.trim();
-    if(!key||!scode){
-      if(!key)$('set-key').classList.add('err');
-      if(!scode)$('set-scode').classList.add('err');
-      setTimeout(()=>{$('set-key').classList.remove('err');$('set-scode').classList.remove('err')},1500);
-      return;
-    }
-    localStorage.setItem('amap_key',key);localStorage.setItem('amap_scode',scode);
+  const kHard=!!(DEPLOY_CONFIG.amapKey&&DEPLOY_CONFIG.amapKey.trim());
+  if(!kHard){
+    const k=$('set-key').value.trim(),s=$('set-scode').value.trim();
+    if(!k||!s){if(!k)$('set-key').classList.add('err');if(!s)$('set-scode').classList.add('err');setTimeout(()=>{$('set-key').classList.remove('err');$('set-scode').classList.remove('err')},1500);return}
+    localStorage.setItem('amap_key',k);localStorage.setItem('amap_scode',s);
   }
-  const syncHard=!!(DEPLOY_CONFIG.workerUrl&&DEPLOY_CONFIG.workerUrl.trim());
-  if(!syncHard){
-    const s=$('set-sync').value.trim();
-    if(s)localStorage.setItem('sync_url',s);else localStorage.removeItem('sync_url');
-  }
+  const uHard=!!(DEPLOY_CONFIG.workerUrl&&DEPLOY_CONFIG.workerUrl.trim());
+  if(!uHard){const u=$('set-sync').value.trim();if(u)localStorage.setItem('sync_url',u);else localStorage.removeItem('sync_url')}
   hide('settings-overlay');location.reload();
 }
 
-/* ══════════════════════════════════════
-   Search
-══════════════════════════════════════ */
+/* ══ Search ══ */
 function initSearchBox(){
   const inp=$('search-inp');
   inp.addEventListener('input',e=>{
-    const q=e.target.value.trim();
-    $('search-clear').classList.toggle('show',q.length>0);
-    clearTimeout(searchTimer);
-    if(!q){closeDd();return}
+    const q=e.target.value.trim();$('search-clear').classList.toggle('show',q.length>0);
+    clearTimeout(searchTimer);if(!q){closeDd();return}
     searchTimer=setTimeout(()=>doSearch(q),350);
   });
   inp.addEventListener('keydown',e=>{if(e.key==='Escape')clearSearch()});
-  document.addEventListener('click',e=>{
-    if(!$('search-wrap').contains(e.target))closeDd();
-  });
+  document.addEventListener('click',e=>{if(!$('search-wrap').contains(e.target))closeDd()});
 }
-
 function doSearch(q){
   if(!PLACE_SEARCH){
     if(typeof AMap==='undefined'){showDdMsg('地图尚未加载');return}
-    AMap.plugin('AMap.PlaceSearch',()=>{
-      PLACE_SEARCH=new AMap.PlaceSearch({city:'南京',pageSize:8,extensions:'base'});
-      doSearch(q);
-    });
-    return;
+    AMap.plugin('AMap.PlaceSearch',()=>{PLACE_SEARCH=new AMap.PlaceSearch({city:'南京',pageSize:8,extensions:'base'});doSearch(q)});return;
   }
   showDdLoading();
   PLACE_SEARCH.search(q,(st,res)=>{
-    if(st==='complete'&&res.poiList?.pois?.length){
-      renderDd(res.poiList.pois);
-    }else{
-      showDdMsg('未找到相关地点');
-    }
+    if(st==='complete'&&res.poiList?.pois?.length)renderDd(res.poiList.pois);
+    else showDdMsg('未找到相关地点');
   });
 }
-
 function renderDd(pois){
   const dd=$('search-dd');
   dd.innerHTML=pois.map(poi=>{
-    // AMap v2.0 location can be LngLat object or plain object
     let lng,lat;
-    if(poi.location){
-      lng=typeof poi.location.getLng==='function'?poi.location.getLng():poi.location.lng;
-      lat=typeof poi.location.getLat==='function'?poi.location.getLat():poi.location.lat;
-    }
+    if(poi.location){lng=typeof poi.location.getLng==='function'?poi.location.getLng():poi.location.lng;lat=typeof poi.location.getLat==='function'?poi.location.getLat():poi.location.lat}
     if(!lng||!lat)return'';
     const addr=poi.address||(poi.pname||'')+(poi.cityname||'')+(poi.adname||'');
-    return`<div class="search-item" onclick="pickResult(${lng},${lat},'${esc4a(poi.name)}','${esc4a(addr)}')">
-      <span class="si-pin">📍</span>
-      <div class="si-info">
-        <div class="si-name">${esc(poi.name)}</div>
-        ${addr?`<div class="si-addr">${esc(addr)}</div>`:''}
-      </div>
-    </div>`;
+    return`<div class="search-item" onclick="pickResult(${lng},${lat},'${esc4a(poi.name)}','${esc4a(addr)}')"><span class="si-pin">📍</span><div class="si-info"><div class="si-name">${esc(poi.name)}</div>${addr?`<div class="si-addr">${esc(addr)}</div>`:''}</div></div>`;
   }).filter(Boolean).join('');
-  if(!dd.innerHTML)showDdMsg('未找到坐标信息');
-  else dd.classList.add('show');
+  if(!dd.innerHTML)showDdMsg('未找到坐标');else dd.classList.add('show');
 }
 function showDdLoading(){$('search-dd').innerHTML=`<div class="search-loading"><div class="spinner" style="width:16px;height:16px;border-width:1.5px"></div><span>搜索中…</span></div>`;$('search-dd').classList.add('show')}
-function showDdMsg(msg){$('search-dd').innerHTML=`<div class="search-none">${msg}</div>`;$('search-dd').classList.add('show')}
+function showDdMsg(m){$('search-dd').innerHTML=`<div class="search-none">${m}</div>`;$('search-dd').classList.add('show')}
 function closeDd(){$('search-dd').classList.remove('show')}
 function clearSearch(){$('search-inp').value='';$('search-clear').classList.remove('show');closeDd()}
-
 function pickResult(lng,lat,name,addr){
-  clearSearch();
-  pendingLL=[parseFloat(lng),parseFloat(lat)];
-  $('add-geocode').textContent=addr||`${parseFloat(lat).toFixed(5)}°N, ${parseFloat(lng).toFixed(5)}°E`;
+  clearSearch();pendingLL=[parseFloat(lng),parseFloat(lat)];
+  $('add-geocode').textContent=addr||`${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E`;
   $('add-name').value=name||'';
   $('add-day').innerHTML=S.days.map(d=>`<option value="${d.id}">${d.label}${d.date?' · '+d.date:''}</option>`).join('');
   show('add-overlay');setTimeout(()=>$('add-name').focus(),280);
   if(MAP){MAP.setCenter([parseFloat(lng),parseFloat(lat)]);MAP.setZoom(15)}
 }
 
-/* ══════════════════════════════════════
-   Add mode
-══════════════════════════════════════ */
-function onMapClick(e){
-  if(!S.addMode)return;
-  pendingLL=[e.lnglat.getLng(),e.lnglat.getLat()];
-  openAddModal();
-}
+/* ══ Add mode ══ */
+function onMapClick(e){if(!S.addMode)return;pendingLL=[e.lnglat.getLng(),e.lnglat.getLat()];openAddModal()}
 function enterAddMode(){S.addMode=true;$('add-hint').classList.add('on');$('sb-hint').classList.add('show');document.body.style.cursor='crosshair';$('add-hint').onclick=exitAddMode}
 function exitAddMode(){S.addMode=false;$('add-hint').classList.remove('on');$('sb-hint').classList.remove('show');document.body.style.cursor='';$('add-hint').onclick=null}
 function openAddModal(){
   exitAddMode();
   const[lng,lat]=pendingLL;
-  $('add-geocode').textContent=`${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E  正在解析地址…`;
-  $('add-name').value='';
+  $('add-geocode').textContent=`${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E  正在解析地址…`;$('add-name').value='';
   const doGeo=()=>GEOCODER.getAddress(pendingLL,(st,res)=>{
-    if(st==='complete'&&res.regeocode){
-      $('add-geocode').textContent=res.regeocode.formattedAddress;
-      if(!$('add-name').value){const poi=res.regeocode.pois?.[0];if(poi)$('add-name').value=poi.name}
-    }else{$('add-geocode').textContent=`${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E`}
+    if(st==='complete'&&res.regeocode){$('add-geocode').textContent=res.regeocode.formattedAddress;if(!$('add-name').value){const p=res.regeocode.pois?.[0];if(p)$('add-name').value=p.name}}
+    else $('add-geocode').textContent=`${lat.toFixed(5)}°N, ${lng.toFixed(5)}°E`;
   });
-  if(GEOCODER)doGeo();
-  else AMap.plugin('AMap.Geocoder',()=>{GEOCODER=new AMap.Geocoder({city:'南京'});doGeo()});
+  if(GEOCODER)doGeo();else AMap.plugin('AMap.Geocoder',()=>{GEOCODER=new AMap.Geocoder({city:'南京'});doGeo()});
   $('add-day').innerHTML=S.days.map(d=>`<option value="${d.id}">${d.label}${d.date?' · '+d.date:''}</option>`).join('');
   show('add-overlay');setTimeout(()=>$('add-name').focus(),280);
 }
@@ -708,232 +548,232 @@ function confirmAdd(){
   const name=$('add-name').value.trim();
   if(!name){$('add-name').classList.add('err');setTimeout(()=>$('add-name').classList.remove('err'),1500);return}
   if(!pendingLL)return;
-  const p={id:S.nPlaceId++,name,lnglat:pendingLL,dayId:parseInt($('add-day').value),addr:$('add-geocode').textContent};
+  const p={id:S.nPlaceId++,name,lnglat:pendingLL,dayId:parseInt($('add-day').value),addr:$('add-geocode').textContent,notes:''};
   S.places.push(p);save();closeAddModal();spawnMarker(p,true);render();
   MAP?.setCenter(pendingLL);MAP?.setZoom(Math.max(MAP.getZoom(),15));
 }
 
-/* ══════════════════════════════════════
-   Markers
-══════════════════════════════════════ */
+/* ══ Markers ══ */
 function dayColor(dayId){const i=S.days.findIndex(d=>d.id===dayId);return DAY_COLORS[Math.max(0,i)%DAY_COLORS.length]}
 function placeNumInDay(p){return S.places.filter(x=>x.dayId===p.dayId&&x.id<=p.id).length}
 function spawnMarker(place,animate){
   if(!MAP)return;
   const color=dayColor(place.dayId),num=placeNumInDay(place);
-  const div=document.createElement('div');
-  if(animate)div.className='marker-new';
+  const div=document.createElement('div');if(animate)div.className='marker-new';
   div.style.cssText='width:28px;height:34px;position:relative;cursor:pointer;';
   div.innerHTML=`<svg width="28" height="34" viewBox="0 0 28 34" fill="none"><path d="M14 0C6.268 0 0 6.268 0 14c0 9.625 14 20 14 20S28 23.625 28 14C28 6.268 21.732 0 14 0z" fill="${color}"/><circle cx="14" cy="14" r="8" fill="white" opacity="0.25"/></svg><span style="position:absolute;top:6px;left:0;width:28px;text-align:center;color:white;font-size:11px;font-weight:700;font-family:'Noto Sans SC',sans-serif;line-height:1">${num}</span>`;
   const m=new AMap.Marker({position:place.lnglat,content:div,offset:new AMap.Pixel(-14,-34),title:place.name});
-  m.on('click',()=>handleMarkerClick(place));
-  m.setMap(MAP);MARKERS[place.id]=m;
+  m.on('click',()=>handleMarkerClick(place));m.setMap(MAP);MARKERS[place.id]=m;
 }
 function removeMarker(id){if(MARKERS[id]){MARKERS[id].setMap(null);delete MARKERS[id]}}
 function refreshMarkers(){Object.keys(MARKERS).forEach(id=>removeMarker(parseInt(id)));S.places.forEach(p=>spawnMarker(p))}
 
-/* ══════════════════════════════════════
-   Routing
-══════════════════════════════════════ */
+/* ══ Routing ══ */
 function clearActivePlugin(){if(activePlugin){try{activePlugin.clear()}catch(_){}activePlugin=null}}
-
 function handleMarkerClick(place){
-  if(!S.rFrom){
-    S.rFrom=place;highlightItem(place.id,'rf');
-    updateRpPoints();show_rp();
-    $('rp-body').innerHTML=`<div class="rp-empty">已选起点：<b>${esc(place.name)}</b><br>再点击一个标记选终点</div>`;
-  }else if(!S.rTo&&place.id!==S.rFrom.id){
-    S.rTo=place;highlightItem(place.id,'rt');planRoute();
-  }else{
-    clearRouteHighlights();clearActivePlugin();
-    S.rFrom=place;S.rTo=null;allPlans=[];
-    highlightItem(place.id,'rf');updateRpPoints();show_rp();
-    $('rp-body').innerHTML=`<div class="rp-empty">已选起点：<b>${esc(place.name)}</b><br>再点击一个标记选终点</div>`;
-  }
+  if(!S.rFrom){S.rFrom=place;highlightItem(place.id,'rf');updateRpPoints();show_rp();$('rp-body').innerHTML=`<div class="rp-empty">已选起点：<b>${esc(place.name)}</b><br>再点击一个标记选终点</div>`}
+  else if(!S.rTo&&place.id!==S.rFrom.id){S.rTo=place;highlightItem(place.id,'rt');planRoute()}
+  else{clearRouteHighlights();clearActivePlugin();S.rFrom=place;S.rTo=null;allPlans=[];highlightItem(place.id,'rf');updateRpPoints();show_rp();$('rp-body').innerHTML=`<div class="rp-empty">已选起点：<b>${esc(place.name)}</b><br>再点击一个标记选终点</div>`}
 }
-
 function setMode(m){
   S.rMode=m;
   document.querySelectorAll('.mode-btn,.rm-btn').forEach(b=>{if(b.dataset.m)b.classList.toggle('on',b.dataset.m===m)});
   if(S.rFrom&&S.rTo)planRoute();
 }
-
 function planRoute(){
   if(!MAP||!S.rFrom||!S.rTo)return;
   clearActivePlugin();allPlans=[];S.activePlan=0;
   updateRpPoints();show_rp();
   $('rp-body').innerHTML=`<div class="rp-loading"><div class="spinner"></div><span>正在规划路线…</span></div>`;
-  const o=[S.rFrom.lnglat[0],S.rFrom.lnglat[1]];
-  const d=[S.rTo.lnglat[0],S.rTo.lnglat[1]];
+  const o=[S.rFrom.lnglat[0],S.rFrom.lnglat[1]],d=[S.rTo.lnglat[0],S.rTo.lnglat[1]];
 
   if(S.rMode==='walking'){
     AMap.plugin('AMap.Walking',()=>{
       activePlugin=new AMap.Walking({map:MAP});
-      activePlugin.search(o,d,(status,result)=>{
-        if(status==='complete'&&result.routes?.length){
-          const r=result.routes[0];
-          $('rp-body').innerHTML=`<div class="single-result"><div class="sr-main">🚶 步行约 ${Math.ceil(r.time/60)} 分钟</div><div class="sr-sub">全程 ${fmtDist(r.distance)}</div></div><div class="steps-title">详细步骤</div>${renderWalkSteps(r.steps||[])}`;
-        }else{
-          $('rp-body').innerHTML=`<div class="rp-empty">步行规划失败：${status}</div>`;
-        }
+      activePlugin.search(o,d,(st,res)=>{
+        if(st==='complete'&&res.routes?.length){const r=res.routes[0];$('rp-body').innerHTML=`<div class="single-result"><div class="sr-main">🚶 步行约 ${Math.ceil(r.time/60)} 分钟</div><div class="sr-sub">全程 ${fmtDist(r.distance)}</div></div><div class="steps-title">详细步骤</div>${renderWalkSteps(r.steps||[])}`}
+        else $('rp-body').innerHTML=`<div class="rp-empty">步行规划失败：${st}</div>`;
       });
     });
   }else if(S.rMode==='riding'){
     AMap.plugin('AMap.Riding',()=>{
       activePlugin=new AMap.Riding({map:MAP});
-      activePlugin.search(o,d,(status,result)=>{
-        if(status==='complete'&&result.routes?.length){
-          const r=result.routes[0];
-          $('rp-body').innerHTML=`<div class="single-result"><div class="sr-main">🚴 骑行约 ${Math.ceil(r.time/60)} 分钟</div><div class="sr-sub">全程 ${fmtDist(r.distance)}</div></div><div class="steps-title">详细步骤</div>${renderWalkSteps(r.steps||[])}`;
-        }else{
-          $('rp-body').innerHTML=`<div class="rp-empty">骑行规划失败：${status}</div>`;
-        }
+      activePlugin.search(o,d,(st,res)=>{
+        if(st==='complete'&&res.routes?.length){const r=res.routes[0];$('rp-body').innerHTML=`<div class="single-result"><div class="sr-main">🚴 骑行约 ${Math.ceil(r.time/60)} 分钟</div><div class="sr-sub">全程 ${fmtDist(r.distance)}</div></div><div class="steps-title">详细步骤</div>${renderWalkSteps(r.steps||[])}`}
+        else $('rp-body').innerHTML=`<div class="rp-empty">骑行规划失败：${st}</div>`;
       });
     });
   }else{
     AMap.plugin('AMap.Transfer',()=>{
-      // extensions:'all' 是获取完整站点名的关键参数
       activePlugin=new AMap.Transfer({map:MAP,city:'南京市',policy:0,extensions:'all'});
-      activePlugin.search(o,d,(status,result)=>{
-        if(status==='complete'&&result.plans?.length){
-          allPlans=result.plans;
-          window._lastTransitRaw=result.plans; // 供调试
-          renderTransitPlans(0);
-        }else{
-          $('rp-body').innerHTML=`<div class="rp-empty">公交规划失败：${status}</div>`;
-        }
+      activePlugin.search(o,d,(st,res)=>{
+        if(st==='complete'&&res.plans?.length){allPlans=res.plans;renderTransitPlans(0)}
+        else $('rp-body').innerHTML=`<div class="rp-empty">公交规划失败：${st}</div>`;
       });
     });
   }
 }
 
-/* ── Transit: multi-plan rendering ── */
-function renderTransitPlans(activeIdx){
-  S.activePlan=activeIdx;
+/* ── Transit rendering ── */
+function renderTransitPlans(idx){
+  S.activePlan=idx;
   let html='';
-  allPlans.slice(0,5).forEach((plan,idx)=>{
-    const mins=Math.ceil(plan.time/60);
-    const walkKm=(plan.walking_distance/1000).toFixed(1);
-    const cost=plan.cost>0?`¥${plan.cost}`:'免费';
-    const tags=getPlanTags(plan);
-    const isActive=idx===activeIdx;
-    const debugId=`dbg-${idx}`;
-    html+=`<div class="plan-card${isActive?' active':''}" onclick="selectPlan(${idx})">
+  allPlans.slice(0,5).forEach((plan,i)=>{
+    const mins=Math.ceil(plan.time/60),walkKm=(plan.walking_distance/1000).toFixed(1),cost=plan.cost>0?`¥${plan.cost}`:'免费';
+    const tags=getPlanTags(plan),active=i===idx;
+    const did=`dbg-${i}`;
+    html+=`<div class="plan-card${active?' active':''}" onclick="selectPlan(${i})">
       <div class="plan-summary">
-        <div class="plan-idx">${idx+1}</div>
+        <div class="plan-idx">${i+1}</div>
         <div class="plan-meta"><div class="plan-time">${mins} 分钟</div><div class="plan-lines">${tags}</div></div>
         <div class="plan-cost-box"><div class="plan-cost">${cost}</div><div class="plan-walk">步行 ${walkKm}km</div></div>
       </div>
       <div class="plan-steps">
         ${renderTransitSteps(plan.segments||[])}
-        <span class="debug-toggle" onclick="event.stopPropagation();toggleDebug('${debugId}')">查看原始数据</span>
-        <pre class="debug-dump" id="${debugId}">${esc(JSON.stringify(plan.segments,null,2))}</pre>
+        <span class="debug-toggle" onclick="event.stopPropagation();toggleDebug('${did}')">🔍 原始数据</span>
+        <pre class="debug-dump" id="${did}">${deepDump(plan.segments)}</pre>
       </div>
     </div>`;
   });
-  $('rp-body').innerHTML=html||`<div class="rp-empty">无方案数据</div>`;
+  $('rp-body').innerHTML=html||`<div class="rp-empty">无方案</div>`;
 }
-function toggleDebug(id){const el=$(id);el&&el.classList.toggle('on')}
 function selectPlan(idx){renderTransitPlans(idx);$('rp-body').scrollTop=0}
+function toggleDebug(id){const el=$(id);el&&el.classList.toggle('on')}
+
+/* ══════════════════════════════════════════════════════
+   deepDump: 使用 Object.getOwnPropertyNames 扫描 AMap 对象
+   的所有属性（包括不可枚举的），这才能看到真实数据
+══════════════════════════════════════════════════════ */
+function deepDump(obj,depth){
+  depth=depth||0;if(depth>4)return'"[深度限制]"';
+  if(obj===null||obj===undefined)return String(obj);
+  if(typeof obj==='string'||typeof obj==='number'||typeof obj==='boolean')return JSON.stringify(obj);
+  if(Array.isArray(obj)){
+    const items=obj.map(v=>deepDump(v,depth+1));
+    return`[${items.join(',')}]`;
+  }
+  if(typeof obj==='object'){
+    // 收集所有属性（包括不可枚举的），遍历原型链
+    const seen=new Set();const result={};
+    let proto=obj;
+    while(proto&&proto!==Object.prototype){
+      Object.getOwnPropertyNames(proto).forEach(k=>{
+        if(seen.has(k)||k==='constructor'||k.startsWith('__'))return;
+        seen.add(k);
+        try{
+          const v=obj[k];
+          if(typeof v==='function')return;
+          result[k]=deepDump(v,depth+1);
+        }catch(e){}
+      });
+      proto=Object.getPrototypeOf(proto);
+    }
+    if(Object.keys(result).length===0){
+      // 尝试直接枚举
+      try{const j=JSON.parse(JSON.stringify(obj));Object.assign(result,j)}catch(_){}
+    }
+    const pairs=Object.entries(result).map(([k,v])=>`"${k}":${v}`);
+    return`{${pairs.join(',')}}`;
+  }
+  return String(obj);
+}
+
+/* ══════════════════════════════════════════════════════
+   amapVal: 从 AMap 对象取一个值，处理 getter / 不可枚举属性
+══════════════════════════════════════════════════════ */
+function amapVal(obj,...keys){
+  if(!obj||typeof obj!=='object')return'';
+  for(const k of keys){
+    try{
+      const v=obj[k];
+      if(v===null||v===undefined)continue;
+      if(typeof v==='string'&&v.trim())return v.trim();
+      if(typeof v==='number')return String(v);
+    }catch(_){}
+  }
+  return'';
+}
+
+/* 从 Stop 对象取站名，枚举所有可能属性 */
+function stopName(s){
+  if(!s)return'';
+  if(typeof s==='string')return s.trim();
+  // 尝试所有可能的站名属性名（包括 AMap 内部属性）
+  const v=amapVal(s,'name','sname','poi_name','stopName','stop_name','getName','poiname');
+  if(v)return v;
+  // 如果 v 为空但 s 不为空，说明属性存在但名称不同，尝试 Object.getOwnPropertyNames
+  try{
+    for(const k of Object.getOwnPropertyNames(s)){
+      try{
+        const val=s[k];
+        if(val&&typeof val==='string'&&val.trim().length>0&&val.length<50){
+          // 站名通常是短字符串，不是URL/函数/数字
+          if(!/^https?:\/\/|^\d+$/.test(val))return val.trim();
+        }
+      }catch(_){}
+    }
+  }catch(_){}
+  return'';
+}
 
 function getPlanTags(plan){
   const parts=[];
   (plan.segments||[]).forEach(seg=>{
     const m=seg.transit_mode;
-    if(m==='SUBWAY'||m==='BUS'||m==='METRO_RAIL'||m==='RAIL'||m==='TRAM'){
-      const bus=seg.bus||{};
-      const bl=(Array.isArray(bus.buslines)&&bus.buslines.length)?bus.buslines[0]:null;
-      const name=strOf(bl?.name)||strOf(bus.name)||strOf(seg.name)||strOf(seg.line_name);
-      const isSub=m==='SUBWAY'||m==='METRO_RAIL'||m==='RAIL';
-      if(name)parts.push(`<span class="tag ${isSub?'tag-sub':'tag-bus'}">${esc(name)}</span>`);
-      else if(isSub)parts.push(`<span class="tag tag-sub">地铁</span>`);
-    }
+    if(!m||m==='WALK')return;
+    const bus=seg.bus||{};
+    const buslines=Array.isArray(bus.buslines)?bus.buslines:[];
+    const bl=buslines[0]||null;
+    const name=amapVal(bl,'name')||amapVal(bus,'name')||amapVal(seg,'name','line_name');
+    const isSub=m==='SUBWAY'||m==='METRO_RAIL'||m==='RAIL';
+    if(name)parts.push(`<span class="tag ${isSub?'tag-sub':'tag-bus'}">${esc(name)}</span>`);
+    else if(isSub)parts.push(`<span class="tag tag-sub">地铁</span>`);
+    else parts.push(`<span class="tag tag-bus">公交</span>`);
   });
   return parts.length?parts.join(''):`<span class="tag tag-walk">步行换乘</span>`;
 }
 
-/* ── Transit steps: AMap v2.0 真实数据结构 ──
-   seg.bus.departure_stop / arrival_stop  → 上下车站（直接在 bus 上）
-   seg.bus.via_num                        → 途经站数
-   seg.bus.buslines[0].name               → 线路名
-   seg.bus.buslines[0].terminal.name      → 终点方向
-*/
 function renderTransitSteps(segments){
   const segs=segments.filter(s=>!(s.transit_mode==='WALK'&&(!s.distance||s.distance<30)));
   if(!segs.length)return`<div style="font-size:11px;color:var(--muted)">暂无详细信息</div>`;
   return segs.map((seg,i)=>{
-    const last=i===segs.length-1;
-    const m=seg.transit_mode;
-
+    const last=i===segs.length-1;const m=seg.transit_mode;
     if(m==='WALK'){
-      const d=fmtDist(seg.distance);
-      const t=seg.time?Math.ceil(seg.time/60)+'分钟':'';
-      return mkStep('dot-walk','conn-walk','mode-walk','🚶 步行',`步行约 ${d}${t?' · '+t:''}`,null,last);
+      return mkStep('dot-walk','conn-walk','mode-walk','🚶 步行',`步行约 ${fmtDist(seg.distance)}${seg.time?' · '+Math.ceil(seg.time/60)+'分钟':''}`,null,last);
     }
+    if(!m||m==='WALK')return'';
+    const bus=seg.bus||{};
+    const buslines=Array.isArray(bus.buslines)?bus.buslines:[];
+    const bl=buslines[0]||null;
 
-    if(m==='SUBWAY'||m==='BUS'||m==='METRO_RAIL'||m==='RAIL'||m==='TRAM'){
-      const bus=seg.bus||{};
-      const buslines=Array.isArray(bus.buslines)?bus.buslines:[];
-      const bl=buslines[0]||null;
+    // 线路名：buslines[0].name 优先
+    const lineName=amapVal(bl,'name')||amapVal(bus,'name')||amapVal(seg,'name','line_name')||(m.includes('SUBWAY')||m.includes('METRO')?'地铁':'公交');
 
-      // 1. 线路名：buslines[0].name → bus.name → fallback
-      const lineName = strOf(bl?.name) || strOf(bus.name) || strOf(seg.name) || strOf(seg.line_name)
-                     || (m==='SUBWAY'||m==='METRO_RAIL'?'地铁':'公交');
+    // ── 站名：在 bus 对象上，用 stopName() 处理 AMap 不可枚举属性 ──
+    const fromStop=stopName(bus.departure_stop)||stopName(bus.entry_stop)||stopName(bus.start_stop)
+                  ||(bl?stopName(bl.departure_stop)||stopName(bl.entry_stop):'')||stopName(seg.departure_stop);
+    const toStop=stopName(bus.arrival_stop)||stopName(bus.exit_stop)||stopName(bus.end_stop)
+                |(bl?stopName(bl.arrival_stop)||stopName(bl.exit_stop):'')||stopName(seg.arrival_stop);
 
-      // 2. 上下车站：直接在 bus 对象上（v2.0 主路径），兜底找 buslines 和 seg
-      const fromStop = stopName(bus.departure_stop)
-                     || stopName(bus.entry_stop)
-                     || stopName(bl?.departure_stop)
-                     || stopName(seg.departure_stop);
-      const toStop   = stopName(bus.arrival_stop)
-                     || stopName(bus.exit_stop)
-                     || stopName(bl?.arrival_stop)
-                     || stopName(seg.arrival_stop);
+    // 途经站数
+    const viaNum=bus.via_num!=null?bus.via_num:(bl&&bl.via_num!=null?bl.via_num:null);
 
-      // 3. 途经站数：bus.via_num → bl.via_num → via_stops 数组长度
-      const viaNum = val(bus.via_num) ?? val(bl?.via_num)
-                   ?? (Array.isArray(bus.via_stops)&&bus.via_stops.length ? bus.via_stops.length : null)
-                   ?? (Array.isArray(bl?.via_stops)&&bl.via_stops.length  ? bl.via_stops.length  : null);
+    // 终点方向
+    const terminal=stopName(bus.terminal)||stopName(bl?.terminal)||amapVal(bus,'direction')||amapVal(bl,'direction');
 
-      // 4. 终点方向
-      const terminal = stopName(bus.terminal) || stopName(bl?.terminal)
-                     || strOf(bus.direction)   || strOf(bl?.direction) || '';
+    let desc='',detail='';
+    if(fromStop&&toStop)desc=`${fromStop} → ${toStop}`;
+    else if(fromStop)desc=`从 ${fromStop} 上车`;
+    else if(toStop)desc=`到 ${toStop} 下车`;
+    else desc=lineName;
 
-      // Build display strings
-      let desc='', detail='';
-      if(fromStop&&toStop)  desc=`${fromStop} → ${toStop}`;
-      else if(fromStop)     desc=`从 ${fromStop} 上车`;
-      else if(toStop)       desc=`到 ${toStop} 下车`;
-      else                  desc=lineName;
+    const dp=[];if(viaNum!=null)dp.push(`经过 ${viaNum} 站`);if(terminal)dp.push(`方向 ${terminal}`);
+    detail=dp.join(' · ')||null;
 
-      const detailParts=[];
-      if(viaNum!=null) detailParts.push(`经过 ${viaNum} 站`);
-      if(terminal)     detailParts.push(`方向 ${terminal}`);
-      detail=detailParts.join(' · ');
-
-      const isSub=m==='SUBWAY'||m==='METRO_RAIL'||m==='RAIL';
-      return mkStep(
-        isSub?'dot-subway':'dot-bus',
-        isSub?'conn-subway':'conn-bus',
-        isSub?'mode-subway':'mode-bus',
-        `${isSub?'🚇':'🚌'} ${lineName}`,
-        desc, detail||null, last
-      );
-    }
-    return '';
+    const isSub=m==='SUBWAY'||m==='METRO_RAIL'||m==='RAIL'||m==='TRAM';
+    return mkStep(isSub?'dot-subway':'dot-bus',isSub?'conn-subway':'conn-bus',isSub?'mode-subway':'mode-bus',`${isSub?'🚇':'🚌'} ${lineName}`,desc,detail,last);
   }).join('');
 }
-
-// 辅助：从各种 stop 对象结构中取站名
-function stopName(s){
-  if(!s)return'';
-  if(typeof s==='string')return s.trim();
-  return strOf(s.name)||strOf(s.stop_name)||strOf(s.sname)||'';
-}
-// 辅助：安全取字符串值
-function strOf(v){return(v&&typeof v==='string'&&v.trim())?v.trim():''}
-// 辅助：安全取数字值（排除 undefined / null，保留 0）
-function val(v){return(v!=null&&v!==undefined&&!isNaN(v))?Number(v):null}
 
 function renderWalkSteps(steps){
   if(!steps.length)return`<div style="color:var(--muted);font-size:11.5px">无详细步骤</div>`;
@@ -942,23 +782,10 @@ function renderWalkSteps(steps){
     return mkStep('dot-walk','conn-walk','mode-walk','',instr||'继续前行',fmtDist(s.distance),i===steps.length-1);
   }).join('');
 }
-
 function mkStep(dotC,connC,modeC,label,desc,detail,last){
-  return`<div class="step-row">
-    <div class="step-line">
-      <div class="step-dot ${dotC}"></div>
-      ${last?'':`<div class="step-connector ${connC}"></div>`}
-    </div>
-    <div class="step-info">
-      ${label?`<div class="step-mode ${modeC}">${label}</div>`:''}
-      <div class="step-desc">${esc(desc)}</div>
-      ${detail?`<div class="step-detail">${esc(detail)}</div>`:''}
-    </div>
-  </div>`;
+  return`<div class="step-row"><div class="step-line"><div class="step-dot ${dotC}"></div>${last?'':`<div class="step-connector ${connC}"></div>`}</div><div class="step-info">${label?`<div class="step-mode ${modeC}">${label}</div>`:''}<div class="step-desc">${esc(desc)}</div>${detail?`<div class="step-detail">${esc(detail)}</div>`:''}</div></div>`;
 }
-
 function fmtDist(m){if(!m&&m!==0)return'';return m>=1000?`${(m/1000).toFixed(1)} km`:`${m} m`}
-
 function updateRpPoints(){
   let h='';
   if(S.rFrom)h+=`<div class="rp-point"><div class="rp-dot d-green"></div><span>${esc(S.rFrom.name)}</span></div>`;
@@ -967,30 +794,19 @@ function updateRpPoints(){
   else h+=`<div class="rp-point" style="opacity:.4;border:1px dashed var(--border)"><div class="rp-dot" style="background:var(--border)"></div><span style="color:var(--muted)">点击标记选终点</span></div>`;
   $('rp-pts').innerHTML=h;
 }
-function clearRoute(){
-  S.rFrom=null;S.rTo=null;allPlans=[];clearRouteHighlights();clearActivePlugin();
-  $('rp').classList.remove('on');
-}
+function clearRoute(){S.rFrom=null;S.rTo=null;allPlans=[];clearRouteHighlights();clearActivePlugin();$('rp').classList.remove('on')}
 function show_rp(){$('rp').classList.add('on')}
 function highlightItem(id,cls){document.querySelectorAll(`.place-item[data-id="${id}"]`).forEach(el=>el.classList.add(cls))}
 function clearRouteHighlights(){document.querySelectorAll('.place-item').forEach(el=>el.classList.remove('rf','rt'))}
 
-/* ══════════════════════════════════════
-   Geolocation
-══════════════════════════════════════ */
+/* ══ Geolocation ══ */
 function toggleLocate(){
   if(!MAP)return;
-  if(S.locateOn){
-    S.locateOn=false;$('locate-btn').classList.remove('on');
-    if(LOCATOR){try{LOCATOR.clearWatch?.()}catch(_){}}
-  }else{
+  if(S.locateOn){S.locateOn=false;$('locate-btn').classList.remove('on');if(LOCATOR)try{LOCATOR.clearWatch?.()}catch(_){}}
+  else{
     S.locateOn=true;$('locate-btn').classList.add('on');
     AMap.plugin('AMap.Geolocation',()=>{
-      if(!LOCATOR){
-        LOCATOR=new AMap.Geolocation({enableHighAccuracy:true,timeout:10000,
-          showCircle:true,showMarker:true,panToLocation:true,showButton:false});
-        MAP.addControl(LOCATOR);
-      }
+      if(!LOCATOR){LOCATOR=new AMap.Geolocation({enableHighAccuracy:true,timeout:10000,showCircle:true,showMarker:true,panToLocation:true,showButton:false});MAP.addControl(LOCATOR)}
       LOCATOR.getCurrentPosition((st,res)=>{
         if(st==='complete'){MAP.setCenter([res.position.lng,res.position.lat]);MAP.setZoom(Math.max(MAP.getZoom(),15))}
         else{$('locate-btn').classList.remove('on');S.locateOn=false;alert('定位失败，请检查浏览器定位权限')}
@@ -999,29 +815,21 @@ function toggleLocate(){
   }
 }
 
-/* ══════════════════════════════════════
-   Day / Place management
-══════════════════════════════════════ */
+/* ══ Day / Place management ══ */
 function addDay(){S.days.push({id:S.nDayId++,label:`Day ${S.days.length+1}`,date:''});save();render()}
 function askDeleteDay(dayId,e){
   e.stopPropagation();
   const day=S.days.find(d=>d.id===dayId);if(!day)return;
   const cnt=S.places.filter(p=>p.dayId===dayId).length;
   $('confirm-title').textContent=`删除 ${day.label}`;
-  $('confirm-body').textContent=cnt
-    ?`「${day.label}」包含 ${cnt} 个地点，将一并删除。确定继续？`
-    :`确定删除「${day.label}」吗？`;
+  $('confirm-body').textContent=cnt?`「${day.label}」包含 ${cnt} 个地点，将一并删除。确定继续？`:`确定删除「${day.label}」吗？`;
   $('confirm-ok').onclick=()=>{confirmDeleteDay(dayId);dismissConfirm()};
   $('confirm-overlay').classList.add('on');
 }
 function dismissConfirm(){$('confirm-overlay').classList.remove('on')}
 function confirmDeleteDay(dayId){
-  S.places.filter(p=>p.dayId===dayId).forEach(p=>{
-    removeMarker(p.id);
-    if(S.rFrom?.id===p.id||S.rTo?.id===p.id)clearRoute();
-  });
-  S.places=S.places.filter(p=>p.dayId!==dayId);
-  S.days=S.days.filter(d=>d.id!==dayId);
+  S.places.filter(p=>p.dayId===dayId).forEach(p=>{removeMarker(p.id);if(S.rFrom?.id===p.id||S.rTo?.id===p.id)clearRoute()});
+  S.places=S.places.filter(p=>p.dayId!==dayId);S.days=S.days.filter(d=>d.id!==dayId);
   save();render();
 }
 function deletePlace(id){
@@ -1035,41 +843,192 @@ function focusPlace(id){
   handleMarkerClick(p);
 }
 
-/* ══════════════════════════════════════
-   Render
-══════════════════════════════════════ */
+/* ══ Notes ══ */
+function toggleNote(id,e){
+  e.stopPropagation();
+  const area=document.getElementById(`note-area-${id}`);
+  if(!area)return;
+  area.classList.toggle('show');
+  if(area.classList.contains('show')){
+    const ta=area.querySelector('textarea');if(ta)ta.focus();
+  }
+}
+function saveNote(id,val){
+  const p=S.places.find(x=>x.id===id);if(!p)return;
+  p.notes=val;save();
+  // Update badge visibility without full re-render
+  document.querySelectorAll(`.note-badge-${id}`).forEach(b=>{b.style.display=val.trim()?'':'none'});
+  // Update displayed note text (view mode)
+  document.querySelectorAll(`.note-txt-${id}`).forEach(t=>{t.textContent=val});
+}
+
+/* ══ Drag & Drop ══ */
+function onDragStart(e,placeId,dayId){
+  dragPlaceId=placeId;dragSrcDayId=dayId;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',String(placeId));
+  setTimeout(()=>{const el=document.querySelector(`.place-item[data-id="${placeId}"]`);if(el)el.classList.add('dragging')},0);
+}
+function onDragEnd(e){
+  dragPlaceId=null;dragSrcDayId=null;
+  document.querySelectorAll('.place-item.dragging,.place-item.drag-above,.place-item.drag-below,.day-group.drag-over').forEach(el=>{el.classList.remove('dragging','drag-above','drag-below','drag-over')});
+}
+function onDragOverItem(e,placeId){
+  if(!dragPlaceId||dragPlaceId===placeId)return;
+  e.preventDefault();e.stopPropagation();e.dataTransfer.dropEffect='move';
+  document.querySelectorAll('.place-item.drag-above,.place-item.drag-below').forEach(el=>el.classList.remove('drag-above','drag-below'));
+  const el=document.querySelector(`.place-item[data-id="${placeId}"]`);
+  if(!el)return;
+  const rect=el.getBoundingClientRect();
+  const mid=rect.top+rect.height/2;
+  el.classList.add(e.clientY<mid?'drag-above':'drag-below');
+}
+function onDragOverDay(e,dayId){
+  if(!dragPlaceId)return;
+  e.preventDefault();e.dataTransfer.dropEffect='move';
+  document.querySelectorAll('.day-group.drag-over').forEach(el=>el.classList.remove('drag-over'));
+  const el=document.getElementById(`sb-day-${dayId}`)||document.getElementById(`sh-day-${dayId}`);
+  if(el)el.classList.add('drag-over');
+}
+function onDropOnItem(e,targetPlaceId,targetDayId){
+  e.preventDefault();e.stopPropagation();
+  if(!dragPlaceId||dragPlaceId===targetPlaceId)return;
+  const dragPlace=S.places.find(p=>p.id===dragPlaceId);
+  const targetPlace=S.places.find(p=>p.id===targetPlaceId);
+  if(!dragPlace||!targetPlace)return;
+
+  // Determine insert position
+  const el=document.querySelector(`.place-item[data-id="${targetPlaceId}"]`);
+  let insertBefore=true;
+  if(el){const rect=el.getBoundingClientRect();insertBefore=e.clientY<rect.top+rect.height/2}
+
+  // Move dragPlace to targetDayId
+  dragPlace.dayId=targetDayId;
+
+  // Reorder: remove drag item, find target index, insert
+  S.places=S.places.filter(p=>p.id!==dragPlaceId);
+  const targetIdx=S.places.findIndex(p=>p.id===targetPlaceId);
+  const insertIdx=insertBefore?targetIdx:targetIdx+1;
+  S.places.splice(insertIdx,0,dragPlace);
+
+  save();render();refreshMarkers();
+}
+function onDropOnDay(e,dayId){
+  e.preventDefault();e.stopPropagation();
+  if(!dragPlaceId)return;
+  const dragPlace=S.places.find(p=>p.id===dragPlaceId);
+  if(!dragPlace)return;
+  dragPlace.dayId=dayId;
+  // Move to end of that day
+  S.places=S.places.filter(p=>p.id!==dragPlaceId);
+  S.places.push(dragPlace);
+  save();render();refreshMarkers();
+}
+function onDragLeaveDay(e,el){el.classList.remove('drag-over')}
+
+/* Edit sequence number */
+function startEditNum(id,e){
+  e.stopPropagation();
+  const p=S.places.find(x=>x.id===id);if(!p)return;
+  const dayPlaces=S.places.filter(x=>x.dayId===p.dayId);
+  const curIdx=dayPlaces.findIndex(x=>x.id===id);
+  const inp=document.getElementById(`num-inp-${id}`);
+  const badge=document.getElementById(`num-badge-${id}`);
+  if(!inp||!badge)return;
+  inp.value=curIdx+1;badge.style.display='none';inp.classList.add('show');inp.focus();inp.select();
+}
+function commitEditNum(id,val){
+  const inp=document.getElementById(`num-inp-${id}`);
+  const badge=document.getElementById(`num-badge-${id}`);
+  if(inp)inp.classList.remove('show');if(badge)badge.style.display='';
+  const p=S.places.find(x=>x.id===id);if(!p)return;
+  const dayPlaces=S.places.filter(x=>x.dayId===p.dayId);
+  const newIdx=Math.max(0,Math.min(dayPlaces.length-1,parseInt(val)-1));
+  if(isNaN(newIdx))return;
+  const curIdx=dayPlaces.findIndex(x=>x.id===id);if(curIdx===newIdx)return;
+  // Reorder within day
+  const allOther=S.places.filter(x=>x.dayId!==p.dayId);
+  dayPlaces.splice(curIdx,1);dayPlaces.splice(newIdx,0,p);
+  // Reconstruct S.places preserving inter-day order
+  S.places=S.places.map(x=>{if(x.dayId===p.dayId)return null;return x}).filter(Boolean);
+  // Re-insert dayPlaces at original positions
+  let di=0;
+  const result=[];
+  S.places.forEach(x=>{while(di<dayPlaces.length&&S.places.indexOf(dayPlaces[di])===-1){result.push(dayPlaces[di++])}result.push(x)});
+  while(di<dayPlaces.length)result.push(dayPlaces[di++]);
+  // Simpler: just replace dayId slots
+  const rebuilt=[];let j=0;
+  const origOrder=[...S.places];
+  // Actually simplest: remove all from this day, rebuild
+  const rest=origOrder.filter(x=>x.dayId!==p.dayId);
+  // interleave dayPlaces back at their original relative positions in S.places
+  // Easy approach: rewrite S.places filtering out dayId, then splice dayPlaces in
+  S.places=rest;const firstDayIdx=S.places.findIndex(x=>x.dayId>p.dayId)||S.places.length;
+  // Just push day places at end and let render sort by array order
+  S.places=[...S.places.filter(x=>x.dayId!==p.dayId),...dayPlaces];
+  save();render();refreshMarkers();
+}
+
+/* ══ Render ══ */
 function dayItemsHTML(prefix){
-  if(!S.days.length)return`<div style="padding:20px;text-align:center;color:var(--muted);font-size:12.5px">暂无天数，点击「添加天数」开始规划</div>`;
+  if(!S.days.length)return`<div style="padding:20px;text-align:center;color:var(--muted);font-size:12.5px">点击「添加天数」开始规划</div>`;
   return S.days.map(day=>{
-    const ps=S.places.filter(p=>p.dayId===day.id),color=dayColor(day.id);
-    return`<div class="day-group" id="${prefix}-day-${day.id}">
+    const ps=S.places.filter(p=>p.dayId===day.id);
+    const color=dayColor(day.id);
+    return`<div class="day-group" id="${prefix}-day-${day.id}"
+        ondragover="onDragOverDay(event,${day.id})"
+        ondrop="onDropOnDay(event,${day.id})"
+        ondragleave="this.classList.remove('drag-over')">
       <div class="day-hd" onclick="toggleDay('${prefix}',${day.id})">
-        <div class="day-left">
-          <div class="day-pip" style="background:${color}"></div>
-          <span class="day-name">${esc(day.label)}</span>
-          ${day.date?`<span style="font-size:10.5px;color:var(--muted);margin-left:3px">${esc(day.date)}</span>`:''}
-        </div>
-        <div class="day-right">
-          <span class="day-cnt">${ps.length} 处</span>
-          <button class="day-del-btn" onclick="askDeleteDay(${day.id},event)" title="删除此天数">✕</button>
-          <span class="day-arr">▼</span>
-        </div>
+        <div class="day-left"><div class="day-pip" style="background:${color}"></div><span class="day-name">${esc(day.label)}</span>${day.date?`<span style="font-size:10.5px;color:var(--muted);margin-left:3px">${esc(day.date)}</span>`:''}</div>
+        <div class="day-right"><span class="day-cnt">${ps.length} 处</span><button class="day-del-btn" onclick="askDeleteDay(${day.id},event)" title="删除">✕</button><span class="day-arr">▼</span></div>
       </div>
       <div class="place-list">
-        ${ps.length===0
-          ?`<div class="place-empty">暂无地点</div>`
-          :ps.map((p,i)=>`<div class="place-item" data-id="${p.id}" onclick="focusPlace(${p.id})">
-              <div class="place-num" style="background:${color}">${i+1}</div>
-              <div class="place-info">
-                <div class="place-name-txt">${esc(p.name)}</div>
-                ${p.addr?`<div class="place-addr-txt">${esc(p.addr.length>30?p.addr.slice(0,30)+'…':p.addr)}</div>`:''}
+        ${ps.length===0?`<div class="place-empty">暂无地点，拖拽可放置</div>`
+          :ps.map((p,i)=>{
+            const hasNotes=p.notes&&p.notes.trim();
+            return`<div class="place-item" data-id="${p.id}"
+                draggable="true"
+                ondragstart="onDragStart(event,${p.id},${p.dayId})"
+                ondragend="onDragEnd(event)"
+                ondragover="onDragOverItem(event,${p.id})"
+                ondrop="onDropOnItem(event,${p.id},${p.dayId})"
+                onclick="focusPlace(${p.id})">
+              <span class="drag-handle" title="拖动排序">⠿</span>
+              <div class="place-num-wrap">
+                <div class="place-num" id="num-badge-${p.id}" style="background:${color}" onclick="startEditNum(${p.id},event)" title="点击修改序号">${i+1}</div>
+                <input class="place-num-input" id="num-inp-${p.id}" type="number" min="1" max="${ps.length}"
+                  onblur="commitEditNum(${p.id},this.value)"
+                  onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){this.classList.remove('show');document.getElementById('num-badge-${p.id}').style.display=''}"
+                  onclick="event.stopPropagation()">
               </div>
-              <button class="place-del" onclick="event.stopPropagation();deletePlace(${p.id})">×</button>
-            </div>`).join('')}
+              <div class="place-info">
+                <div class="place-name-row">
+                  <div class="place-name-txt">${esc(p.name)}</div>
+                  <span class="place-note-badge note-badge-${p.id}" style="display:${hasNotes?'':'none'}" onclick="toggleNote(${p.id},event)" title="查看/编辑备注">📝</span>
+                </div>
+                ${p.addr?`<div class="place-addr-txt">${esc(p.addr.length>30?p.addr.slice(0,30)+'…':p.addr)}</div>`:''}
+                <div class="place-note-area" id="note-area-${p.id}">
+                  ${hasNotes?`<div class="place-note-txt note-txt-${p.id}">${esc(p.notes)}</div>`:''}
+                  <textarea class="place-note-ta" placeholder="添加备注…" onclick="event.stopPropagation()"
+                    oninput="saveNote(${p.id},this.value)"
+                    onfocus="this.previousElementSibling&&(this.previousElementSibling.style.display='none')"
+                    onblur="if(!this.value.trim()&&this.previousElementSibling)this.previousElementSibling.style.display=''"
+                  >${esc(p.notes||'')}</textarea>
+                </div>
+              </div>
+              <div class="place-actions">
+                <button class="place-action-btn" onclick="event.stopPropagation();toggleNote(${p.id},event)" title="备注">📝</button>
+                <button class="place-action-btn place-del-btn" onclick="event.stopPropagation();deletePlace(${p.id})" title="删除">🗑</button>
+              </div>
+            </div>`;
+          }).join('')
+        }
       </div>
     </div>`;
   }).join('');
 }
+
 function render(){
   $('sb-body').innerHTML=dayItemsHTML('sb');
   const sh=$('sh-body');if(sh)sh.innerHTML=dayItemsHTML('sh');
@@ -1077,9 +1036,7 @@ function render(){
 }
 function toggleDay(p,id){const el=$(`${p}-day-${id}`);if(el)el.classList.toggle('closed')}
 
-/* ══════════════════════════════════════
-   Mobile sheet
-══════════════════════════════════════ */
+/* ══ Mobile sheet ══ */
 function initSheet(){
   const grip=$('grip'),sheet=$('m-sheet');let sy=0,startT=0;
   grip.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;const m=sheet.style.transform.match(/translateY\((.*)px\)/);startT=m?parseFloat(m[1]):0;sheet.style.transition='none'},{passive:true});
@@ -1090,12 +1047,9 @@ function initSheet(){
 function toggleSheet(){sheetUp=!sheetUp;$('m-sheet').style.transition='transform .3s var(--ease)';$('m-sheet').classList.toggle('up',sheetUp);$('fab-s').textContent=sheetUp?'✕':'☰';if(sheetUp)render()}
 function closeSheet(){sheetUp=false;$('m-sheet').classList.remove('up');$('fab-s').textContent='☰'}
 
-/* ══════════════════════════════════════
-   Helpers
-══════════════════════════════════════ */
+/* ══ Helpers ══ */
 function $(id){return document.getElementById(id)}
-function show(id){$(id).classList.add('on')}
-function hide(id){$(id).classList.remove('on')}
+function show(id){$(id).classList.add('on')}function hide(id){$(id).classList.remove('on')}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function esc4a(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ')}
 </script>

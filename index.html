@@ -431,6 +431,23 @@ select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/sv
 <button class="fab" id="fab-s" onclick="toggleSheet()">☰</button>
 
 <script>
+/* ╔══════════════════════════════════════════════════════════╗
+   ║  📌 部署配置（填好后任何设备打开都无需重新输入）              ║
+   ║  部署到固定网址后填写下方三项，留空则使用手动输入的密钥        ║
+   ╚══════════════════════════════════════════════════════════╝ */
+const DEPLOY_CONFIG = {
+  amapKey:   'e00a6b490d6fdcc73c01caa07a682416',   // ← 你的高德 JS API Key
+  amapScode: 'c61b6cc66255325efeb7812b1821ccd2',   // ← 你的高德安全密钥（jsCode）
+  workerUrl: 'https://purple-fire-da20.haynanson.workers.dev/',   // ← 你的 Cloudflare Worker URL（用于云同步，可不填）
+};
+/* ────────────────────────────────────────────────────────────
+   安全说明：
+   · 高德 JS API Key 本身必须在浏览器端运行，无法完全隐藏。
+   · 在高德控制台将 Key 的「域名白名单」设为你的域名，
+     他人即使拿到 Key 也无法在自己的域名使用，已足够安全。
+   · 如需更高隔离：在高德控制台绑定域名 → 仅你的域名可用。
+   ──────────────────────────────────────────────────────────── */
+
 /* ══════════════════════════════════════
    State
 ══════════════════════════════════════ */
@@ -445,45 +462,47 @@ let searchTimer=null,activePlugin=null;
    Persist
 ══════════════════════════════════════ */
 const STORE='nj_trip_v4';
+// 取配置值：DEPLOY_CONFIG（硬编码）优先，回退到 localStorage（手动输入）
+function getCfg(key,lsKey){return(DEPLOY_CONFIG[key]&&DEPLOY_CONFIG[key].trim())||localStorage.getItem(lsKey)||''}
+function getAmapKey(){return getCfg('amapKey','amap_key')}
+function getAmapScode(){return getCfg('amapScode','amap_scode')}
+function getSyncUrl(){return getCfg('workerUrl','sync_url')}
+
 function dataObj(){return{days:S.days,places:S.places,nDayId:S.nDayId,nPlaceId:S.nPlaceId}}
 function applyData(d){if(!d)return;S.days=d.days||S.days;S.places=d.places||[];S.nDayId=d.nDayId||2;S.nPlaceId=d.nPlaceId||1}
 
 function save(){
-  // 1. 本地即时保存
   try{localStorage.setItem(STORE,JSON.stringify(dataObj()))}catch(_){}
-  // 2. 云端异步同步（不阻塞 UI）
-  const url=localStorage.getItem('sync_url');
+  const url=getSyncUrl();
   if(url){
-    fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dataObj())})
-      .catch(()=>{});// 静默失败，本地数据不受影响
+    fetch(`${url}/data`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dataObj())})
+      .catch(()=>{});
   }
 }
 
 async function load(){
-  // 先读本地（立即可用）
   try{applyData(JSON.parse(localStorage.getItem(STORE)||'null'))}catch(_){}
-  // 再拉云端（如配置），云端更新则覆盖本地
-  const url=localStorage.getItem('sync_url');
+  const url=getSyncUrl();
   if(!url)return;
   try{
-    const res=await fetch(url,{signal:AbortSignal.timeout(4000)});
+    const res=await fetch(`${url}/data`,{signal:AbortSignal.timeout(4000)});
     if(res.ok){
       const d=await res.json();
       if(d&&Object.keys(d).length){
         applyData(d);
-        localStorage.setItem(STORE,JSON.stringify(dataObj()));// 同步到本地缓存
+        localStorage.setItem(STORE,JSON.stringify(dataObj()));
       }
     }
   }catch(_){}
 }
 
+
 /* ══════════════════════════════════════
    Boot
 ══════════════════════════════════════ */
 window.addEventListener('DOMContentLoaded',async()=>{
-  await load(); // 等待云端数据（最多4秒），本地数据立即可用
-  const key=localStorage.getItem('amap_key');
-  const scode=localStorage.getItem('amap_scode');
+  await load();
+  const key=getAmapKey(),scode=getAmapScode();
   if(key&&scode){hide('api-overlay');loadAmap(key,scode)}
   render();initSheet();initSearchBox();
 });
@@ -541,17 +560,22 @@ function initMap(){
    Settings modal
 ══════════════════════════════════════ */
 function openSettings(){
-  const key=localStorage.getItem('amap_key')||'';
-  const scode=localStorage.getItem('amap_scode')||'';
-  const syncUrl=localStorage.getItem('sync_url')||'';
-  const hasKeys=key&&scode;
-  const hasCF=!!syncUrl;
+  const key=getAmapKey(),scode=getAmapScode(),syncUrl=getSyncUrl();
+  const keyHard=!!(DEPLOY_CONFIG.amapKey&&DEPLOY_CONFIG.amapKey.trim());
+  const syncHard=!!(DEPLOY_CONFIG.workerUrl&&DEPLOY_CONFIG.workerUrl.trim());
   $('key-status-box').innerHTML=`
-    <div class="key-status ${hasKeys?'key-ok':'key-none'}">${hasKeys?'✅ API Key 和安全密钥已配置':'⚠️ 尚未配置密钥，地图功能无法使用'}</div>
-    <div class="key-status" style="background:${hasCF?'#ECFDF5':'#F8FAFC'};color:${hasCF?'#065F46':'var(--muted)'};border-color:${hasCF?'#A7F3D0':'var(--border)'};margin-top:5px">${hasCF?'☁️ 云端同步已启用':'💾 仅本地存储'}</div>`;
-  $('set-key').value=key;$('set-key').type='password';
-  $('set-scode').value=scode;$('set-scode').type='password';
-  $('set-sync').value=syncUrl;
+    <div class="key-status ${key&&scode?'key-ok':'key-none'}">
+      ${key&&scode?'✅ API 密钥已配置':'⚠️ 尚未配置密钥'}
+      ${keyHard?'<span style="font-size:10px;opacity:.65"> · 已硬编码（需编辑 HTML 修改）</span>':''}
+    </div>
+    <div class="key-status" style="background:${syncUrl?'#ECFDF5':'#F8FAFC'};color:${syncUrl?'#065F46':'var(--muted)'};border-color:${syncUrl?'#A7F3D0':'var(--border)'};margin-top:5px">
+      ${syncUrl?'☁️ 云端同步已启用':'💾 仅本地存储'}
+      ${syncHard?'<span style="font-size:10px;opacity:.65"> · 已硬编码</span>':''}
+    </div>`;
+  $('set-key').value=key;$('set-key').type='password';$('set-key').readOnly=keyHard;
+  $('set-scode').value=scode;$('set-scode').type='password';$('set-scode').readOnly=keyHard;
+  $('set-sync').value=syncUrl;$('set-sync').readOnly=syncHard;
+  [$('set-key'),$('set-scode')].forEach(el=>el.style.opacity=keyHard?'.55':'1');
   show('settings-overlay');
 }
 function toggleKeyVis(id,btn){
@@ -560,21 +584,23 @@ function toggleKeyVis(id,btn){
   else{inp.type='password';btn.textContent='👁 查看'}
 }
 function saveSettings(){
-  const key=$('set-key').value.trim();
-  const scode=$('set-scode').value.trim();
-  if(!key||!scode){
-    if(!key)$('set-key').classList.add('err');
-    if(!scode)$('set-scode').classList.add('err');
-    setTimeout(()=>{$('set-key').classList.remove('err');$('set-scode').classList.remove('err')},1500);
-    return;
+  const keyHard=!!(DEPLOY_CONFIG.amapKey&&DEPLOY_CONFIG.amapKey.trim());
+  if(!keyHard){
+    const key=$('set-key').value.trim(),scode=$('set-scode').value.trim();
+    if(!key||!scode){
+      if(!key)$('set-key').classList.add('err');
+      if(!scode)$('set-scode').classList.add('err');
+      setTimeout(()=>{$('set-key').classList.remove('err');$('set-scode').classList.remove('err')},1500);
+      return;
+    }
+    localStorage.setItem('amap_key',key);localStorage.setItem('amap_scode',scode);
   }
-  localStorage.setItem('amap_key',key);
-  localStorage.setItem('amap_scode',scode);
-  const syncUrl=$('set-sync').value.trim();
-  if(syncUrl)localStorage.setItem('sync_url',syncUrl);
-  else localStorage.removeItem('sync_url');
-  hide('settings-overlay');
-  location.reload();
+  const syncHard=!!(DEPLOY_CONFIG.workerUrl&&DEPLOY_CONFIG.workerUrl.trim());
+  if(!syncHard){
+    const s=$('set-sync').value.trim();
+    if(s)localStorage.setItem('sync_url',s);else localStorage.removeItem('sync_url');
+  }
+  hide('settings-overlay');location.reload();
 }
 
 /* ══════════════════════════════════════
@@ -813,25 +839,25 @@ function selectPlan(idx){renderTransitPlans(idx);$('rp-body').scrollTop=0}
 function getPlanTags(plan){
   const parts=[];
   (plan.segments||[]).forEach(seg=>{
-    if(seg.transit_mode==='SUBWAY'||seg.transit_mode==='BUS'){
-      // AMap v2.0 stores line info either in seg.bus.buslines[] OR seg.bus directly
-      const buslines=seg.bus?.buslines||[];
-      if(buslines.length){
-        buslines.forEach(bl=>{
-          const name=bl.name||'';
-          if(name)parts.push(seg.transit_mode==='SUBWAY'
-            ?`<span class="tag tag-sub">${name}</span>`
-            :`<span class="tag tag-bus">${name}</span>`);
-        });
-      }else if(seg.transit_mode==='SUBWAY'){
-        parts.push(`<span class="tag tag-sub">地铁</span>`);
-      }
+    const m=seg.transit_mode;
+    if(m==='SUBWAY'||m==='BUS'||m==='METRO_RAIL'||m==='RAIL'||m==='TRAM'){
+      const bus=seg.bus||{};
+      const bl=(Array.isArray(bus.buslines)&&bus.buslines.length)?bus.buslines[0]:null;
+      const name=strOf(bl?.name)||strOf(bus.name)||strOf(seg.name)||strOf(seg.line_name);
+      const isSub=m==='SUBWAY'||m==='METRO_RAIL'||m==='RAIL';
+      if(name)parts.push(`<span class="tag ${isSub?'tag-sub':'tag-bus'}">${esc(name)}</span>`);
+      else if(isSub)parts.push(`<span class="tag tag-sub">地铁</span>`);
     }
   });
   return parts.length?parts.join(''):`<span class="tag tag-walk">步行换乘</span>`;
 }
 
-/* ── Transit steps ── */
+/* ── Transit steps: AMap v2.0 真实数据结构 ──
+   seg.bus.departure_stop / arrival_stop  → 上下车站（直接在 bus 上）
+   seg.bus.via_num                        → 途经站数
+   seg.bus.buslines[0].name               → 线路名
+   seg.bus.buslines[0].terminal.name      → 终点方向
+*/
 function renderTransitSteps(segments){
   const segs=segments.filter(s=>!(s.transit_mode==='WALK'&&(!s.distance||s.distance<30)));
   if(!segs.length)return`<div style="font-size:11px;color:var(--muted)">暂无详细信息</div>`;
@@ -845,68 +871,45 @@ function renderTransitSteps(segments){
       return mkStep('dot-walk','conn-walk','mode-walk','🚶 步行',`步行约 ${d}${t?' · '+t:''}`,null,last);
     }
 
-    if(m==='SUBWAY'||m==='BUS'||m==='METRO_RAIL'||m==='RAIL'){
-      // AMap v2.0 Transfer w/ extensions:'all':
-      // Data can be at seg.bus.buslines[0] OR at seg.bus directly (no buslines array).
-      // We try both structures and pick whichever has the data.
-      const bus = seg.bus || {};
-      const bl0 = (bus.buslines&&bus.buslines.length) ? bus.buslines[0] : null;
-      // Source = busline object if available, else fall through to bus/seg
-      const src = bl0 || bus;
+    if(m==='SUBWAY'||m==='BUS'||m==='METRO_RAIL'||m==='RAIL'||m==='TRAM'){
+      const bus=seg.bus||{};
+      const buslines=Array.isArray(bus.buslines)?bus.buslines:[];
+      const bl=buslines[0]||null;
 
-      // ── Line name ──
-      const lineName = src.name || seg.line_name || seg.name
+      // 1. 线路名：buslines[0].name → bus.name → fallback
+      const lineName = strOf(bl?.name) || strOf(bus.name) || strOf(seg.name) || strOf(seg.line_name)
                      || (m==='SUBWAY'||m==='METRO_RAIL'?'地铁':'公交');
 
-      // ── Stop helpers: check every known field name in every known container ──
-      function getStop(key){
-        // keys tried: departure_stop, start_stop, entry_stop (v2 alias)
-        const candidates=[
-          bl0?.[key]?.name, bl0?.[key],           // buslines[0]
-          bus?.[key]?.name,  bus?.[key],           // bus object
-          seg?.[key]?.name,  seg?.[key],           // segment top-level
-        ];
-        for(const c of candidates){
-          if(c&&typeof c==='string'&&c.trim())return c.trim();
-          if(c&&typeof c==='object'&&c.name)return c.name;
-        }
-        return '';
-      }
-      const fromStop = getStop('departure_stop') || getStop('start_stop') || getStop('entry_stop')
-                     // last resort: first element of via_stops
-                     || (src.via_stops?.length>0 ? (src.via_stops[0]?.name||'') : '');
-      const toStop   = getStop('arrival_stop')   || getStop('end_stop')   || getStop('exit_stop')
-                     || (src.via_stops?.length>0 ? (src.via_stops[src.via_stops.length-1]?.name||'') : '');
+      // 2. 上下车站：直接在 bus 对象上（v2.0 主路径），兜底找 buslines 和 seg
+      const fromStop = stopName(bus.departure_stop)
+                     || stopName(bus.entry_stop)
+                     || stopName(bl?.departure_stop)
+                     || stopName(seg.departure_stop);
+      const toStop   = stopName(bus.arrival_stop)
+                     || stopName(bus.exit_stop)
+                     || stopName(bl?.arrival_stop)
+                     || stopName(seg.arrival_stop);
 
-      // ── Via count ──
-      const viaNum = src.via_num ?? seg.via_num
-                   ?? (src.via_stops?.length>0 ? src.via_stops.length : null);
+      // 3. 途经站数：bus.via_num → bl.via_num → via_stops 数组长度
+      const viaNum = val(bus.via_num) ?? val(bl?.via_num)
+                   ?? (Array.isArray(bus.via_stops)&&bus.via_stops.length ? bus.via_stops.length : null)
+                   ?? (Array.isArray(bl?.via_stops)&&bl.via_stops.length  ? bl.via_stops.length  : null);
 
-      // ── Terminal direction ──
-      const terminal = src.terminal?.name || bus.terminal?.name || src.direction || '';
+      // 4. 终点方向
+      const terminal = stopName(bus.terminal) || stopName(bl?.terminal)
+                     || strOf(bus.direction)   || strOf(bl?.direction) || '';
 
-      // ── Build display ──
-      let desc, detail;
-      if(fromStop&&toStop){
-        desc=`${fromStop} → ${toStop}`;
-        const parts=[];
-        if(viaNum!=null)parts.push(`经过 ${viaNum} 站`);
-        if(terminal)parts.push(`方向 ${terminal}`);
-        detail=parts.join(' · ')||null;
-      }else if(fromStop){
-        desc=`从 ${fromStop} 上车`;
-        detail=viaNum!=null?`经过 ${viaNum} 站`:null;
-      }else if(toStop){
-        desc=`到 ${toStop} 下车`;
-        detail=viaNum!=null?`经过 ${viaNum} 站`:null;
-      }else{
-        desc=lineName;
-        const parts=[];
-        if(viaNum!=null)parts.push(`经过 ${viaNum} 站`);
-        if(terminal)parts.push(`方向 ${terminal}`);
-        // If still nothing, show a note so user knows to check debug data
-        detail=parts.length?parts.join(' · '):'（站点名需 extensions:all 支持，见下方原始数据）';
-      }
+      // Build display strings
+      let desc='', detail='';
+      if(fromStop&&toStop)  desc=`${fromStop} → ${toStop}`;
+      else if(fromStop)     desc=`从 ${fromStop} 上车`;
+      else if(toStop)       desc=`到 ${toStop} 下车`;
+      else                  desc=lineName;
+
+      const detailParts=[];
+      if(viaNum!=null) detailParts.push(`经过 ${viaNum} 站`);
+      if(terminal)     detailParts.push(`方向 ${terminal}`);
+      detail=detailParts.join(' · ');
 
       const isSub=m==='SUBWAY'||m==='METRO_RAIL'||m==='RAIL';
       return mkStep(
@@ -914,12 +917,23 @@ function renderTransitSteps(segments){
         isSub?'conn-subway':'conn-bus',
         isSub?'mode-subway':'mode-bus',
         `${isSub?'🚇':'🚌'} ${lineName}`,
-        desc,detail,last
+        desc, detail||null, last
       );
     }
     return '';
   }).join('');
 }
+
+// 辅助：从各种 stop 对象结构中取站名
+function stopName(s){
+  if(!s)return'';
+  if(typeof s==='string')return s.trim();
+  return strOf(s.name)||strOf(s.stop_name)||strOf(s.sname)||'';
+}
+// 辅助：安全取字符串值
+function strOf(v){return(v&&typeof v==='string'&&v.trim())?v.trim():''}
+// 辅助：安全取数字值（排除 undefined / null，保留 0）
+function val(v){return(v!=null&&v!==undefined&&!isNaN(v))?Number(v):null}
 
 function renderWalkSteps(steps){
   if(!steps.length)return`<div style="color:var(--muted);font-size:11.5px">无详细步骤</div>`;

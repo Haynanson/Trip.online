@@ -353,6 +353,33 @@ select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/sv
 .confirm-btns{display:flex;gap:8px}
 .confirm-btns .btn{flex:1}
 
+/* ── Organize modal ── */
+.org-overlay{position:fixed;inset:0;background:rgba(28,33,48,.6);backdrop-filter:blur(6px);z-index:550;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
+.org-overlay.on{opacity:1;pointer-events:all}
+.org-modal{background:var(--white);border-radius:18px;width:90vw;max-width:860px;max-height:85vh;box-shadow:0 24px 70px rgba(28,33,48,.22);display:flex;flex-direction:column;overflow:hidden;transform:translateY(20px);transition:transform .25s var(--ease)}
+.org-overlay.on .org-modal{transform:translateY(0)}
+.org-modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.org-modal-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--navy)}
+.org-modal-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.org-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;transition:color .15s}
+.org-close:hover{color:var(--navy)}
+.org-body{flex:1;overflow:auto;padding:16px 20px;display:flex;gap:14px;align-items:flex-start}
+.org-unassigned{flex-shrink:0;width:200px}
+.org-pool-title{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+.org-pool{background:var(--cream);border-radius:10px;padding:8px;min-height:80px;border:2px dashed var(--border);transition:all .15s}
+.org-pool.drag-over{background:var(--amber-pale);border-color:var(--amber)}
+.org-days{flex:1;display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.org-day-col{flex-shrink:0;width:170px}
+.org-day-title{font-size:12px;font-weight:600;padding:6px 8px;border-radius:7px 7px 0 0;color:#fff;margin-bottom:0;display:flex;align-items:center;justify-content:space-between}
+.org-day-drop{min-height:80px;padding:6px;border-radius:0 0 10px 10px;border:2px solid transparent;border-top:none;transition:all .15s}
+.org-day-drop.drag-over{background:var(--amber-pale);border-color:var(--amber)}
+.org-chip{display:flex;align-items:center;gap:6px;padding:7px 9px;background:var(--white);border-radius:7px;margin-bottom:5px;cursor:grab;box-shadow:0 1px 4px rgba(28,33,48,.08);transition:all .15s;font-size:12px;color:var(--navy);border:1px solid var(--border)}
+.org-chip:hover{box-shadow:var(--shs);transform:translateY(-1px)}
+.org-chip.dragging{opacity:.35}
+.org-chip-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.org-chip-name{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.org-foot{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+
 /* ── Mobile sheet ── */
 .m-sheet{display:none;position:fixed;bottom:0;left:0;right:0;height:65vh;background:var(--white);border-radius:18px 18px 0 0;box-shadow:0 -3px 24px rgba(28,33,48,.12);z-index:200;transform:translateY(calc(100% - 68px));transition:transform .3s var(--ease);flex-direction:column}
 .m-sheet.up{transform:translateY(0)}
@@ -437,10 +464,13 @@ select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/sv
       </div>
       <button class="sb-settings-btn" onclick="openSettings()" title="设置">⚙</button>
     </div>
-    <div class="sb-body" id="sb-body"></div>
+    <div class="sb-body" id="sb-body" ondragover="sbBodyDragOver(event)"></div>
     <div class="sb-foot">
       <button class="btn btn-ghost" onclick="addDay()">＋ 添加天数</button>
-      <button class="btn btn-amber" onclick="enterAddMode()">📍 点击地图添加地点</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost" style="flex:1" onclick="openOrg()">🗂 快速整理</button>
+        <button class="btn btn-amber" style="flex:1" onclick="enterAddMode()">📍 添加地点</button>
+      </div>
     </div>
   </aside>
 
@@ -481,6 +511,23 @@ select.form-i{cursor:pointer;appearance:none;background-image:url("data:image/sv
   </div>
 </div>
 
+<!-- Organize Modal -->
+<div class="org-overlay" id="org-overlay">
+  <div class="org-modal">
+    <div class="org-modal-head">
+      <div>
+        <div class="org-modal-title">快速整理行程</div>
+        <div class="org-modal-sub">将地点拖入对应天数栏，完成后点击「应用」</div>
+      </div>
+      <button class="org-close" onclick="closeOrg()">✕</button>
+    </div>
+    <div class="org-body" id="org-body"></div>
+    <div class="org-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeOrg()">取消</button>
+      <button class="btn btn-amber btn-sm" onclick="applyOrg()">✓ 应用排列</button>
+    </div>
+  </div>
+</div>
 <div class="m-sheet" id="m-sheet">
   <div class="sheet-grip" id="grip"></div>
   <div class="sheet-hd"><span class="sheet-title">行程地点</span><span class="sheet-cnt" id="sh-cnt">0 个地点</span></div>
@@ -719,23 +766,47 @@ function planRoute(){
       });
     });
   }else{
+    window._clearTransitRaw();
     AMap.plugin('AMap.Transfer',()=>{
       activePlugin=new AMap.Transfer({map:MAP,city:'南京市',policy:0,extensions:'all'});
       activePlugin.search(o,d,(st,res)=>{
-        if(st==='complete'&&res.plans?.length){allPlans=res.plans;renderTransitPlans(0)}
-        else $('rp-body').innerHTML=`<div class="rp-empty">公交规划失败：${st}</div>`;
+        if(st==='complete'){
+          // 优先使用拦截到的原始 JSON（纯数据，无封装问题）
+          const raw=window._getLastTransitRaw();
+          if(raw&&raw.route&&raw.route.transits&&raw.route.transits.length){
+            allPlans=raw.route.transits.map(t=>({
+              time:     parseInt(t.cost?.duration||t.duration||0),
+              cost:     parseFloat(t.cost?.transit_fee||t.cost||0)||0,
+              walking_distance: parseInt(t.walking_distance||0),
+              segments: t.segments||[]
+            }));
+            renderTransitPlansRaw(0);
+          }else if(res.plans?.length){
+            // fallback：用 AMap 对象（站名可能无法显示）
+            allPlans=res.plans;renderTransitPlans(0);
+          }else{
+            $('rp-body').innerHTML=`<div class="rp-empty">未找到公共交通路线</div>`;
+          }
+        }else{
+          $('rp-body').innerHTML=`<div class="rp-empty">公交规划失败：${st}</div>`;
+        }
       });
     });
   }
 }
 
-/* ── Transit rendering ── */
-function renderTransitPlans(idx){
+/* ── Transit rendering (raw JSON path: route.transits[i].segments[j].bus.buslines[0].name) ── */
+
+/* renderTransitPlansRaw: 解析拦截到的原始 JSON，站名/线路名完全可靠 */
+function renderTransitPlansRaw(idx){
   S.activePlan=idx;
   let html='';
   allPlans.slice(0,5).forEach((plan,i)=>{
-    const mins=Math.ceil(plan.time/60),walkKm=(plan.walking_distance/1000).toFixed(1),cost=plan.cost>0?`¥${plan.cost}`:'免费';
-    const tags=getPlanTags(plan),active=i===idx;
+    const mins=Math.ceil((plan.time||0)/60);
+    const walkKm=((plan.walking_distance||0)/1000).toFixed(1);
+    const cost=(plan.cost||0)>0?`¥${plan.cost}`:'免费';
+    const tags=getRawPlanTags(plan);
+    const active=i===idx;
     const did=`dbg-${i}`;
     html+=`<div class="plan-card${active?' active':''}" onclick="selectPlan(${i})">
       <div class="plan-summary">
@@ -743,103 +814,57 @@ function renderTransitPlans(idx){
         <div class="plan-meta"><div class="plan-time">${mins} 分钟</div><div class="plan-lines">${tags}</div></div>
         <div class="plan-cost-box"><div class="plan-cost">${cost}</div><div class="plan-walk">步行 ${walkKm}km</div></div>
       </div>
-      <div class="plan-steps">
-        ${renderTransitSteps(plan.segments||[])}
-        <span class="debug-toggle" onclick="event.stopPropagation();toggleDebug('${did}')">🔍 原始数据</span>
-        <pre class="debug-dump" id="${did}">${deepDump(plan.segments)}</pre>
-      </div>
+      <div class="plan-steps">${renderRawTransitSteps(plan.segments||[])}</div>
     </div>`;
   });
   $('rp-body').innerHTML=html||`<div class="rp-empty">无方案</div>`;
 }
-function selectPlan(idx){renderTransitPlans(idx);$('rp-body').scrollTop=0}
-function toggleDebug(id){const el=$(id);el&&el.classList.toggle('on')}
 
-/* ══════════════════════════════════════════════════════
-   deepDump: 使用 Object.getOwnPropertyNames 扫描 AMap 对象
-   的所有属性（包括不可枚举的），这才能看到真实数据
-══════════════════════════════════════════════════════ */
-function deepDump(obj,depth){
-  depth=depth||0;if(depth>4)return'"[深度限制]"';
-  if(obj===null||obj===undefined)return String(obj);
-  if(typeof obj==='string'||typeof obj==='number'||typeof obj==='boolean')return JSON.stringify(obj);
-  if(Array.isArray(obj)){
-    const items=obj.map(v=>deepDump(v,depth+1));
-    return`[${items.join(',')}]`;
-  }
-  if(typeof obj==='object'){
-    // 收集所有属性（包括不可枚举的），遍历原型链
-    const seen=new Set();const result={};
-    let proto=obj;
-    while(proto&&proto!==Object.prototype){
-      Object.getOwnPropertyNames(proto).forEach(k=>{
-        if(seen.has(k)||k==='constructor'||k.startsWith('__'))return;
-        seen.add(k);
-        try{
-          const v=obj[k];
-          if(typeof v==='function')return;
-          result[k]=deepDump(v,depth+1);
-        }catch(e){}
-      });
-      proto=Object.getPrototypeOf(proto);
-    }
-    if(Object.keys(result).length===0){
-      // 尝试直接枚举
-      try{const j=JSON.parse(JSON.stringify(obj));Object.assign(result,j)}catch(_){}
-    }
-    const pairs=Object.entries(result).map(([k,v])=>`"${k}":${v}`);
-    return`{${pairs.join(',')}}`;
-  }
-  return String(obj);
+/* fallback: 使用 AMap 对象（可能站名为空） */
+function renderTransitPlans(idx){
+  S.activePlan=idx;
+  let html='';
+  allPlans.slice(0,5).forEach((plan,i)=>{
+    const mins=Math.ceil((plan.time||0)/60);
+    const walkKm=((plan.walking_distance||0)/1000).toFixed(1);
+    const cost=(plan.cost||0)>0?`¥${plan.cost}`:'免费';
+    const tags=getPlanTagsAMap(plan);
+    const active=i===idx;
+    html+=`<div class="plan-card${active?' active':''}" onclick="selectPlan(${i})">
+      <div class="plan-summary">
+        <div class="plan-idx">${i+1}</div>
+        <div class="plan-meta"><div class="plan-time">${mins} 分钟</div><div class="plan-lines">${tags}</div></div>
+        <div class="plan-cost-box"><div class="plan-cost">${cost}</div><div class="plan-walk">步行 ${walkKm}km</div></div>
+      </div>
+      <div class="plan-steps">${renderTransitStepsAMap(plan.segments||[])}</div>
+    </div>`;
+  });
+  $('rp-body').innerHTML=html||`<div class="rp-empty">无方案</div>`;
 }
 
-/* ══════════════════════════════════════════════════════
-   amapVal: 从 AMap 对象取一个值，处理 getter / 不可枚举属性
-══════════════════════════════════════════════════════ */
-function amapVal(obj,...keys){
-  if(!obj||typeof obj!=='object')return'';
-  for(const k of keys){
-    try{
-      const v=obj[k];
-      if(v===null||v===undefined)continue;
-      if(typeof v==='string'&&v.trim())return v.trim();
-      if(typeof v==='number')return String(v);
-    }catch(_){}
-  }
-  return'';
+function selectPlan(idx){
+  // Re-render with same plan list
+  const raw=window._getLastTransitRaw();
+  if(raw&&raw.route&&raw.route.transits?.length){renderTransitPlansRaw(idx)}
+  else renderTransitPlans(idx);
+  $('rp-body').scrollTop=0;
 }
 
-/* 从 Stop 对象取站名，枚举所有可能属性 */
-function stopName(s){
-  if(!s)return'';
-  if(typeof s==='string')return s.trim();
-  // 尝试所有可能的站名属性名（包括 AMap 内部属性）
-  const v=amapVal(s,'name','sname','poi_name','stopName','stop_name','getName','poiname');
-  if(v)return v;
-  // 如果 v 为空但 s 不为空，说明属性存在但名称不同，尝试 Object.getOwnPropertyNames
-  try{
-    for(const k of Object.getOwnPropertyNames(s)){
-      try{
-        const val=s[k];
-        if(val&&typeof val==='string'&&val.trim().length>0&&val.length<50){
-          // 站名通常是短字符串，不是URL/函数/数字
-          if(!/^https?:\/\/|^\d+$/.test(val))return val.trim();
-        }
-      }catch(_){}
-    }
-  }catch(_){}
-  return'';
-}
-
-function getPlanTags(plan){
+/* ── 原始 JSON 解析（REST API v3 数据结构）──
+   segments[i].bus.buslines[0].name        → 线路名
+   segments[i].bus.departure_stop.name     → 上车站
+   segments[i].bus.arrival_stop.name       → 下车站
+   segments[i].bus.via_num                 → 经过站数
+   segments[i].bus.buslines[0].terminal.name → 终点方向
+*/
+function getRawPlanTags(plan){
   const parts=[];
   (plan.segments||[]).forEach(seg=>{
-    const m=seg.transit_mode;
-    if(!m||m==='WALK')return;
+    const m=(seg.transit_mode||'').toUpperCase();
+    if(m==='WALK')return;
     const bus=seg.bus||{};
-    const buslines=Array.isArray(bus.buslines)?bus.buslines:[];
-    const bl=buslines[0]||null;
-    const name=amapVal(bl,'name')||amapVal(bus,'name')||amapVal(seg,'name','line_name');
+    const bl=(bus.buslines&&bus.buslines[0])||null;
+    const name=(bl&&bl.name)||bus.name||seg.name||seg.line_name||'';
     const isSub=m==='SUBWAY'||m==='METRO_RAIL'||m==='RAIL';
     if(name)parts.push(`<span class="tag ${isSub?'tag-sub':'tag-bus'}">${esc(name)}</span>`);
     else if(isSub)parts.push(`<span class="tag tag-sub">地铁</span>`);
@@ -848,46 +873,70 @@ function getPlanTags(plan){
   return parts.length?parts.join(''):`<span class="tag tag-walk">步行换乘</span>`;
 }
 
-function renderTransitSteps(segments){
-  const segs=segments.filter(s=>!(s.transit_mode==='WALK'&&(!s.distance||s.distance<30)));
+function renderRawTransitSteps(segments){
+  const segs=(segments||[]).filter(s=>{
+    const m=(s.transit_mode||'').toUpperCase();
+    if(m==='WALK'&&(!s.distance||parseInt(s.distance)<30))return false;
+    return true;
+  });
   if(!segs.length)return`<div style="font-size:11px;color:var(--muted)">暂无详细信息</div>`;
   return segs.map((seg,i)=>{
-    const last=i===segs.length-1;const m=seg.transit_mode;
+    const last=i===segs.length-1;
+    const m=(seg.transit_mode||'').toUpperCase();
     if(m==='WALK'){
-      return mkStep('dot-walk','conn-walk','mode-walk','🚶 步行',`步行约 ${fmtDist(seg.distance)}${seg.time?' · '+Math.ceil(seg.time/60)+'分钟':''}`,null,last);
+      const d=fmtDist(parseInt(seg.distance||0));
+      const t=seg.time?Math.ceil(parseInt(seg.time)/60)+'分钟':'';
+      return mkStep('dot-walk','conn-walk','mode-walk','🚶 步行',`步行约 ${d}${t?' · '+t:''}`,null,last);
     }
-    if(!m||m==='WALK')return'';
     const bus=seg.bus||{};
-    const buslines=Array.isArray(bus.buslines)?bus.buslines:[];
-    const bl=buslines[0]||null;
-
-    // 线路名：buslines[0].name 优先
-    const lineName=amapVal(bl,'name')||amapVal(bus,'name')||amapVal(seg,'name','line_name')||(m.includes('SUBWAY')||m.includes('METRO')?'地铁':'公交');
-
-    // ── 站名：在 bus 对象上，用 stopName() 处理 AMap 不可枚举属性 ──
-    const fromStop=stopName(bus.departure_stop)||stopName(bus.entry_stop)||stopName(bus.start_stop)
-                  ||(bl?stopName(bl.departure_stop)||stopName(bl.entry_stop)||stopName(bl.start_stop):'')||stopName(seg.departure_stop);
-    const toStop=stopName(bus.arrival_stop)||stopName(bus.exit_stop)||stopName(bus.end_stop)
-                ||(bl?stopName(bl.arrival_stop)||stopName(bl.exit_stop)||stopName(bl.end_stop):'')||stopName(seg.arrival_stop);
-
-    // 途经站数
-    const viaNum=bus.via_num!=null?bus.via_num:(bl&&bl.via_num!=null?bl.via_num:null);
-
-    // 终点方向
-    const terminal=stopName(bus.terminal)||stopName(bl?.terminal)||amapVal(bus,'direction')||amapVal(bl,'direction');
-
+    const bl=(bus.buslines&&bus.buslines[0])||null;
+    // 原始 JSON 中这些都是纯字符串，直接访问
+    const lineName=(bl&&bl.name)||bus.name||seg.name||seg.line_name||(m.includes('SUBWAY')?'地铁':'公交');
+    const fromStop=(bus.departure_stop&&bus.departure_stop.name)||
+                   (bl&&bl.departure_stop&&bl.departure_stop.name)||
+                   seg.departure_stop_name||'';
+    const toStop  =(bus.arrival_stop&&bus.arrival_stop.name)||
+                   (bl&&bl.arrival_stop&&bl.arrival_stop.name)||
+                   seg.arrival_stop_name||'';
+    const viaNum  =bus.via_num!=null?bus.via_num:(bl&&bl.via_num!=null?bl.via_num:null);
+    const terminal=(bl&&bl.terminal&&bl.terminal.name)||
+                   (bus.terminal&&bus.terminal.name)||
+                   (bl&&bl.direction)||bus.direction||'';
     let desc='',detail='';
     if(fromStop&&toStop)desc=`${fromStop} → ${toStop}`;
     else if(fromStop)desc=`从 ${fromStop} 上车`;
     else if(toStop)desc=`到 ${toStop} 下车`;
     else desc=lineName;
-
-    const dp=[];if(viaNum!=null)dp.push(`经过 ${viaNum} 站`);if(terminal)dp.push(`方向 ${terminal}`);
+    const dp=[];
+    if(viaNum!=null)dp.push(`经过 ${viaNum} 站`);
+    if(terminal)dp.push(`方向 ${terminal}`);
     detail=dp.join(' · ')||null;
-
     const isSub=m==='SUBWAY'||m==='METRO_RAIL'||m==='RAIL'||m==='TRAM';
-    return mkStep(isSub?'dot-subway':'dot-bus',isSub?'conn-subway':'conn-bus',isSub?'mode-subway':'mode-bus',`${isSub?'🚇':'🚌'} ${lineName}`,desc,detail,last);
+    return mkStep(isSub?'dot-subway':'dot-bus',isSub?'conn-subway':'conn-bus',
+                  isSub?'mode-subway':'mode-bus',`${isSub?'🚇':'🚌'} ${lineName}`,desc,detail,last);
   }).join('');
+}
+
+/* ── AMap 对象 fallback ── */
+function getPlanTagsAMap(plan){
+  const parts=[];
+  (plan.segments||[]).forEach(seg=>{
+    const m=seg.transit_mode;
+    if(!m||m==='WALK')return;
+    const bus=seg.bus||{};
+    const buslines=Array.isArray(bus.buslines)?bus.buslines:[];
+    const bl=buslines[0]||null;
+    let name='';
+    try{name=bl?.name||bus.name||seg.name||''}catch(_){}
+    const isSub=m==='SUBWAY'||m==='METRO_RAIL'||m==='RAIL';
+    if(name)parts.push(`<span class="tag ${isSub?'tag-sub':'tag-bus'}">${esc(String(name))}</span>`);
+    else if(isSub)parts.push(`<span class="tag tag-sub">地铁</span>`);
+    else parts.push(`<span class="tag tag-bus">公交</span>`);
+  });
+  return parts.length?parts.join(''):`<span class="tag tag-walk">步行换乘</span>`;
+}
+function renderTransitStepsAMap(segs){
+  return`<div style="font-size:11px;color:var(--muted);padding:4px 0">（站名数据加载中，请稍后重试路线规划）</div>`;
 }
 
 function renderWalkSteps(steps){
@@ -1161,6 +1210,156 @@ function initSheet(){
 }
 function toggleSheet(){sheetUp=!sheetUp;$('m-sheet').style.transition='transform .3s var(--ease)';$('m-sheet').classList.toggle('up',sheetUp);$('fab-s').textContent=sheetUp?'✕':'☰';if(sheetUp)render()}
 function closeSheet(){sheetUp=false;$('m-sheet').classList.remove('up');$('fab-s').textContent='☰'}
+
+/* ══ Drag auto-scroll ══ */
+let _autoScrollTimer=null;
+function startAutoScroll(el,e){
+  if(_autoScrollTimer)return;
+  _autoScrollTimer=setInterval(()=>{
+    if(!el)return;
+    const rect=el.getBoundingClientRect();
+    const zone=60; // px from edge to trigger scroll
+    const speed=12;
+    if(e._lastY!==undefined){
+      const y=e._lastY;
+      if(y-rect.top<zone) el.scrollTop-=speed;
+      else if(rect.bottom-y<zone) el.scrollTop+=speed;
+    }
+  },30);
+}
+function stopAutoScroll(){
+  if(_autoScrollTimer){clearInterval(_autoScrollTimer);_autoScrollTimer=null}
+}
+// Track last mouse/touch Y for auto-scroll
+document.addEventListener('dragover',e=>{e._lastY=e.clientY;
+  const sb=$('sb-body');if(sb)e._sbEl=sb;
+  if(sb){const r=sb.getBoundingClientRect();if(e.clientY>r.top&&e.clientY<r.bottom){sb._scrollY=e.clientY;startAutoScroll(sb,e)}}
+  else stopAutoScroll();
+},{passive:true});
+document.addEventListener('dragend',stopAutoScroll);
+// Override sb-body dragover to inject Y into scrolling
+function sbBodyDragOver(e){
+  const sb=$('sb-body');if(!sb)return;
+  sb._scrollY=e.clientY;
+  const rect=sb.getBoundingClientRect();
+  const zone=56,speed=14;
+  if(e.clientY-rect.top<zone) sb.scrollTop-=speed;
+  else if(rect.bottom-e.clientY<zone) sb.scrollTop+=speed;
+}
+
+/* ══ Organize modal ══ */
+let orgState={}; // {placeId: {dayId, order}}
+
+function openOrg(){
+  // Build orgState from current S.places
+  orgState={};
+  S.places.forEach((p,i)=>{orgState[p.id]={dayId:p.dayId,order:i,name:p.name,addr:p.addr||''}});
+  renderOrgModal();
+  $('org-overlay').classList.add('on');
+}
+function closeOrg(){$('org-overlay').classList.remove('on')}
+
+function renderOrgModal(){
+  const body=$('org-body');
+  // Left: unassigned pool
+  // Right: day columns
+  const unassigned=Object.values(orgState).filter(p=>!p.dayId);
+  // Build columns HTML
+  let colsHtml=S.days.map(day=>{
+    const color=dayColor(day.id);
+    const dayPlaces=Object.entries(orgState)
+      .filter(([id,p])=>p.dayId===day.id)
+      .sort((a,b)=>a[1].order-b[1].order);
+    const chips=dayPlaces.map(([id,p])=>`
+      <div class="org-chip" id="oc-${id}" draggable="true"
+        ondragstart="orgChipDragStart(event,${id})"
+        ondragend="orgChipDragEnd(event)">
+        <div class="org-chip-dot" style="background:${color}"></div>
+        <span class="org-chip-name">${esc(p.name)}</span>
+      </div>`).join('');
+    return`<div class="org-day-col">
+      <div class="org-day-title" style="background:${color}">${esc(day.label)}<span style="font-size:10px;opacity:.7">${dayPlaces.length}处</span></div>
+      <div class="org-day-drop" id="odd-${day.id}"
+        ondragover="orgDropOver(event,${day.id})"
+        ondrop="orgDrop(event,${day.id})"
+        ondragleave="this.classList.remove('drag-over')">
+        ${chips||`<div style="font-size:11px;color:var(--muted);padding:8px;text-align:center">拖入地点</div>`}
+      </div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML=`
+    <div class="org-unassigned">
+      <div class="org-pool-title">未分配地点</div>
+      <div class="org-pool" id="org-pool"
+        ondragover="orgPoolDragOver(event)"
+        ondrop="orgPoolDrop(event)"
+        ondragleave="this.classList.remove('drag-over')">
+        ${Object.entries(orgState).filter(([id,p])=>!p.dayId).map(([id,p])=>`
+          <div class="org-chip" id="oc-${id}" draggable="true"
+            ondragstart="orgChipDragStart(event,${id})"
+            ondragend="orgChipDragEnd(event)">
+            <div class="org-chip-dot" style="background:var(--muted)"></div>
+            <span class="org-chip-name">${esc(p.name)}</span>
+          </div>`).join('')||
+          `<div style="font-size:11px;color:var(--muted);padding:8px;text-align:center">所有地点已分配</div>`
+        }
+      </div>
+    </div>
+    <div class="org-days">${colsHtml}</div>`;
+}
+
+let orgDraggingId=null;
+function orgChipDragStart(e,id){
+  orgDraggingId=id;
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',String(id));
+  setTimeout(()=>{const el=document.getElementById(`oc-${id}`);if(el)el.classList.add('dragging')},0);
+}
+function orgChipDragEnd(e){
+  if(orgDraggingId){const el=document.getElementById(`oc-${orgDraggingId}`);if(el)el.classList.remove('dragging')}
+  orgDraggingId=null;
+  document.querySelectorAll('.org-day-drop,.org-pool').forEach(el=>el.classList.remove('drag-over'));
+}
+function orgDropOver(e,dayId){e.preventDefault();e.dataTransfer.dropEffect='move';document.getElementById(`odd-${dayId}`)?.classList.add('drag-over')}
+function orgPoolDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';$('org-pool')?.classList.add('drag-over')}
+function orgDrop(e,dayId){
+  e.preventDefault();
+  if(!orgDraggingId)return;
+  const id=parseInt(orgDraggingId);
+  // Move to this day, put at end
+  const dayPlaces=Object.entries(orgState).filter(([pid,p])=>p.dayId===dayId).sort((a,b)=>a[1].order-b[1].order);
+  const maxOrder=dayPlaces.length?Math.max(...dayPlaces.map(([,p])=>p.order))+1:0;
+  if(orgState[id]){orgState[id].dayId=dayId;orgState[id].order=maxOrder}
+  renderOrgModal();
+}
+function orgPoolDrop(e){
+  e.preventDefault();
+  if(!orgDraggingId)return;
+  const id=parseInt(orgDraggingId);
+  if(orgState[id])orgState[id].dayId=null;
+  renderOrgModal();
+}
+
+function applyOrg(){
+  // Apply orgState back to S.places
+  // Build new places array sorted by (dayId, order)
+  const mapped=S.places.map(p=>{
+    const os=orgState[p.id];
+    if(os){return{...p,dayId:os.dayId||p.dayId}}
+    return p;
+  });
+  // Sort within each day by order in orgState
+  mapped.sort((a,b)=>{
+    const oa=orgState[a.id]?.order??999;
+    const ob=orgState[b.id]?.order??999;
+    if(a.dayId!==b.dayId)return 0;
+    return oa-ob;
+  });
+  S.places=mapped;
+  save();render();refreshMarkers();
+  closeOrg();
+}
 
 /* ══ Helpers ══ */
 function $(id){return document.getElementById(id)}
